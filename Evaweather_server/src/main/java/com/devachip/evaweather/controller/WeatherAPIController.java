@@ -2,17 +2,22 @@ package com.devachip.evaweather.controller;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
-
-import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.devachip.evaweather.model.DataBean;
 import com.devachip.evaweather.model.UltraSrtNcstRequest;
 import com.devachip.evaweather.service.WeatherAPIService;
+import com.devachip.evaweather.vo.AreaLocation;
 
 @RestController
 public class WeatherAPIController {
@@ -26,53 +31,47 @@ public class WeatherAPIController {
 	}
 
 	@GetMapping(value = "nowWeather")
-	public String getVliageFcstInfo(HttpServletRequest req) {
+	public String getVilageFcstInfo(@RequestParam(required=true) String areaCode) {
 		// 입력값 검증
-		String errorMsg = service.nowWeatherValidation(req);
+		Map<String, Object> reqMap = new HashMap<>();
+		reqMap.put("areaCode", areaCode);
+		String errorMsg = service.nowWeatherValidation(reqMap);
 		
 		if (StringUtils.isNotBlank(errorMsg)) {
 			return errorMsg;
 		}
 		
-		DateFormat format = new SimpleDateFormat("yyyyMMdd");
+		// 현재 시간
+		DateFormat dFormat = new SimpleDateFormat("yyyyMMdd");
+		DateFormat tFormat = new SimpleDateFormat("hhmm");
 		Date d = new Date();
-		String currentDate = format.format(d); 
+		String currentDate = dFormat.format(d); 
+		String currentTime = tFormat.format(d);
 		
-		// 필수 입력값 설정
-		UltraSrtNcstRequest request = new UltraSrtNcstRequest(
-				SERVICE_KEY, 
-				getParameter(req, "pageNo", "1"),
-				getParameter(req, "numOfRows", "10"), 
-				getParameter(req, "baseDate", currentDate),
-				getParameter(req, "baseTime", "0000")
-				);
-
-		// 옵션값 입력
-		request.setDataType(getParameter(req, "dataType", "JSON"));
-		request.setNx(getParameter(req, "nx", "60"));
-		request.setNy(getParameter(req, "ny", "127"));
-
-		String result = service.getUltraSrtNcst(request);
-
-		return result;
-	}
-	
-	public String getParameter(HttpServletRequest req, String key, String defaultValue) {
-		String returnValue = "";
-		
-		try {
-			String value = req.getParameter(key);
+		// 현재시간이 40분 이전이라면 API 데이터가 없기 때문에 이전 시간 데이터를 호출한다.
+		String timePtn = "([0-1]{1}[0-9]{1}|2[0-3]{1})[0-3]{1}[0-9]{1}";
+		if (currentTime.matches(timePtn)) {
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(d);
+			cal.set(Calendar.MINUTE, -40);
 			
-			if (StringUtils.isBlank(value)) {
-				returnValue = defaultValue;
-			} else {
-				returnValue = value;
-			}
-		} catch (Exception e) {
-			e.fillInStackTrace();
-			System.out.println(e);
+			currentDate = dFormat.format(cal.getTime());
+			currentTime = tFormat.format(cal.getTime());
 		}
 		
-		return returnValue;
+		// 행정구역코드에 맞는 좌표 정보
+		AreaLocation areaLocation = DataBean.getAreaLocations().get(areaCode);
+		
+		// 필수 입력값 설정
+		UltraSrtNcstRequest request = new UltraSrtNcstRequest(SERVICE_KEY, "1", "164", currentDate, currentTime);
+
+		// 옵션값 입력
+		request.setDataType("JSON");
+		request.setNx(Optional.ofNullable(areaLocation.getNx()).orElse(60));
+		request.setNy(Optional.ofNullable(areaLocation.getNy()).orElse(127));
+
+		// API 통신
+		String result = service.getUltraSrtNcst(request);
+		return result;
 	}
 }

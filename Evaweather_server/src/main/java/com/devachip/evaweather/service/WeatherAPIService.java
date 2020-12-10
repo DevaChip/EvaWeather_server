@@ -7,17 +7,9 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.JsonGenerationException;
@@ -25,7 +17,9 @@ import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.stereotype.Service;
 
+import com.devachip.evaweather.model.DataBean;
 import com.devachip.evaweather.model.UltraSrtNcstRequest;
+import com.devachip.evaweather.vo.AreaLocation;
 
 /**
  * 날씨 API 받아오기
@@ -60,9 +54,9 @@ public class WeatherAPIService {
 			sb.append("&" + URLEncoder.encode("dataType", "UTF-8") + "="
 					+ URLEncoder.encode(request.getDataType(), "UTF-8")); /* 요청자료형식(XML/JSON)Default: XML */
 			sb.append("&" + URLEncoder.encode("nx", "UTF-8") + "="
-					+ URLEncoder.encode(request.getNx(), "UTF-8")); /* 예보지점의 X 좌표값 */
+					+ URLEncoder.encode(Integer.toString(request.getNx()), "UTF-8")); /* 예보지점의 X 좌표값 */
 			sb.append("&" + URLEncoder.encode("ny", "UTF-8") + "="
-					+ URLEncoder.encode(request.getNy(), "UTF-8")); /* 예보지점 Y 좌표 */
+					+ URLEncoder.encode(Integer.toString(request.getNy()), "UTF-8")); /* 예보지점 Y 좌표 */
 
 			URL url = new URL(sb.toString()); // url 세팅
 
@@ -108,174 +102,39 @@ public class WeatherAPIService {
 	}
 
 	// 초단기 실황 조회 입력값 검증
-	public String nowWeatherValidation(HttpServletRequest req) {
+	public String nowWeatherValidation(Map<String, Object> reqMap) {
 		Map<String, Object> errorMap = new HashMap<String, Object>();
 		
-		if (req == null) {
-			return "{\"Error\":\"requestParam is Null.\"}";
+		if (reqMap == null || reqMap.size()==0) {
+			return "{\"Error\":\"Request Param is Null.\"}";
 		}
-
-		DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
-		DateFormat timeFormat = new SimpleDateFormat("hhmm");
-		List<String> dataTypeList = Arrays.asList(new String[] {"JSON", "XML"});
-
-		int requiredParams = 0;	// 필수 입력값 갯수 확인
 		
-		Enumeration<String> keys = req.getParameterNames(); 
- 		while(keys.hasMoreElements()) {
-			String key = (String)keys.nextElement();
-			Object value = req.getParameter(key);
+		Set<String> keys = reqMap.keySet();
+		for (String key:keys) {
+			Object value = reqMap.get(key);
 			
-			// 빈 값인 경우
-			if (value == null) {
-				errorMap.put(key, "data is Null");
-				continue;
-			}
-			
-			switch (key) {
-			/* 필수 입력값 */
-			case "baseDate":
+			switch(key) {
+			case "areaCode": // 행정구역코드
 				try {
-					Date d = dateFormat.parse((String) value);
-					
-					// 값이 제대로 된 경우
-					if (StringUtils.equals((String)value, dateFormat.format(d))) {
-						requiredParams++;	// 필수 입력값 카운트
-					} 
-					// 잘못된 값인 경우
-					else {
-						errorMap.put(key, "invalid data:" + (String)value);
-					}
-				} 
-				// 데이터 포맷이 틀린 경우(yyyyMMdd)
-				catch (ParseException e) {
-					errorMap.put(key, "invalid data format(yyyyMMdd):" + (String)value);
-				}
-				// 데이터 자료형이 틀린 경우(String)
-				catch (ClassCastException e) {
-					errorMap.put(key, "invalid data type(String):" + (String)value);
-				}
-				break;
-			case "baseTime":
-				try {
-					Date d = timeFormat.parse((String) value);
-					
-					// 값이 제대로 된 경우
-					if (!StringUtils.equals((String)value, timeFormat.format(d))) {
-						requiredParams++;	// 필수 입력값 카운트
-					} 
-					// 잘못된 값인 경우
-					else {
-						errorMap.put(key, "invalid data:" + (String)value);
-					}
-				} 
-				// 데이터 포맷이 틀린 경우(hhmm)
-				catch (ParseException e) {
-					errorMap.put(key, "invalid data format(hhmm):" + (String)value);
-				}
-				// 데이터 자료형이 틀린 경우(String)
-				catch (ClassCastException e) {
-					errorMap.put(key, "invalid data type(String):" + (String)value);
-				}
-				break;
-			case "pageNo":
-				try {
-					Integer pageNo = Integer.parseInt((String)value);
-					
-					// 값이 제대로 된 경우
-					if (pageNo>0) {
-						requiredParams++;	// 필수 입력값 카운트
-					} 
-					// 잘못된 값인 경우
-					// TODO: numOfRows 보다 값이 큰 경우
-					else {
-						errorMap.put(key, "invalid data:" + (String)value);
-					}
-				} 
-				// 데이터 포맷이 틀린 경우(Number)
-				catch (NumberFormatException e) {
-					errorMap.put(key, "invalid data format(Number):" + (String)value);
-				}
-				// 데이터 자료형이 틀린 경우(String)
-				catch (ClassCastException e) {
-					errorMap.put(key, "invalid data type(String):" + (String)value);
-				}
-				break;
-			case "numOfRows":
-				try {
-					Integer numOfRows = Integer.parseInt((String)value);
-					
-					// 값이 제대로 된 경우
-					if (numOfRows>0) {
-						requiredParams++;	// 필수 입력값 카운트
-					} 
-					// 잘못된 값인 경우					
-					else {
-						errorMap.put(key, "invalid data:" + (String)value);
-					}
-				} 
-				// 데이터 포맷이 틀린 경우(Number)
-				catch (NumberFormatException e) {
-					errorMap.put(key, "invalid data format(Number):" + (String)value);
-				}
-				// 데이터 자료형이 틀린 경우(String)
-				catch (ClassCastException e) {
-					errorMap.put(key, "invalid data type(String):" + (String)value);
-				}
-				break;
+					// 빈 값인 경우
+					if (StringUtils.isBlank((String)value)) {
+						errorMap.put(key, String.format("%s value is empty.", key));
+					} else {
+						AreaLocation areaLocation = DataBean.getAreaLocations().get(value);
 
-			/* 옵션 값 */
-			case "dataType":
-				try {
-					// 잘못된 값인 경우
-					if (!dataTypeList.contains((String)value)) {
-						errorMap.put(key, "invalid data[JSON|XML]:" + (String)value);
+						// 행정구역코드값이 잘못된 경우 
+						if (areaLocation==null) {
+							errorMap.put(key, String.format("Invalid AreaCode : %s", value));
+						}
 					}
-				}
-				// 데이터 자료형이 틀린 경우(String)
-				catch (ClassCastException e) {
-					errorMap.put(key, "invalid data type(String):" + (String)value);
-				}
-				break;
-			case "nx":
-				try {
-					Integer nx = Integer.parseInt((String)value);
+				} catch(ClassCastException e) {
+					e.fillInStackTrace();
 					
-					// 잘못된 값인 경우
-					if (nx<=0) {
-						errorMap.put(key, "invalid data:" + (String)value);
-					}
-				} 
-				// 데이터 포맷이 틀린 경우(Number)
-				catch (NumberFormatException e) {
-					errorMap.put(key, "invalid data format(Number):" + (String)value);
+					errorMap.put(key, String.format("Invalid Data format(required=String) : %s", value));
 				}
-				// 데이터 자료형이 틀린 경우(String)
-				catch (ClassCastException e) {
-					errorMap.put(key, "invalid data type(String):" + (String)value);
-				}
-				break;
-			case "ny":
-				try {
-					Integer ny = Integer.parseInt((String)value);
-					
-					// 잘못된 값인 경우
-					if (ny<=0) {
-						errorMap.put(key, "invalid data:" + (String)value);
-					}
-				} 
-				// 데이터 포맷이 틀린 경우(Number)
-				catch (NumberFormatException e) {
-					errorMap.put(key, "invalid data format(Number):" + (String)value);
-				}
-				// 데이터 자료형이 틀린 경우(String)
-				catch (ClassCastException e) {
-					errorMap.put(key, "invalid data type(String):" + (String)value);
-				}
-				break;
 			}
 		}
-
+		
 		String result = "";
 		
 		// 입력값이 잘못된 경우
@@ -286,18 +145,17 @@ public class WeatherAPIService {
 			} catch (JsonGenerationException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+				
+				result = "{\"Error\":\"ErrorMsg to Json Failed.\"}";
 			} catch (JsonMappingException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+				result = "{\"Error\":\"ErrorMsg to Json Failed.\"}";
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+				result = "{\"Error\":\"ErrorMsg to Json Failed.\"}";
 			}
-		}
-		// 필수 입력값이 입력되지 않은 경우
-		else if (requiredParams<4) {
-			result = "{\"Error\":\"required value not entered.\""
-					+ ",\"requiredParams\":\"baseDate, baseTime, pageNo, numOfRows\"}";
 		}
 		
 		return result;

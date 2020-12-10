@@ -11,7 +11,9 @@ public class DBConnect {
 		return instance;
 	}
 	
-	public Connection dbconnect() {
-		DatabaseInfo databaseInfo = ServiceMng.servuce
-	}
+	/*
+	 * public Connection dbconnect() { DatabaseInfo databaseInfo =
+	 * ServiceMng.servuce }
+	 */
 }
+ 
