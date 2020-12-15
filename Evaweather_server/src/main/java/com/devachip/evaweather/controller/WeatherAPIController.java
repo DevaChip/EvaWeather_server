@@ -43,7 +43,7 @@ public class WeatherAPIController {
 		
 		// 현재 시간
 		DateFormat dFormat = new SimpleDateFormat("yyyyMMdd");
-		DateFormat tFormat = new SimpleDateFormat("hhmm");
+		DateFormat tFormat = new SimpleDateFormat("HHmm");
 		Date d = new Date();
 		String currentDate = dFormat.format(d); 
 		String currentTime = tFormat.format(d);
