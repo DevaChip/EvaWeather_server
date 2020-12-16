@@ -20,6 +20,6 @@ public class UltraSrtNcstRequest {
 	
 	/* 옵션 */
 	@Nullable private String dataType;// 응답자료형식[ XML | JSON ]
-	@Nullable private int nx;		// 예보지점 X 좌표[엑셀 참고]
-	@Nullable private int ny;		// 예보지점 Y 좌표[엑셀 참고]
+	@Nullable private String nx;		// 예보지점 X 좌표[엑셀 참고]
+	@Nullable private String ny;		// 예보지점 Y 좌표[엑셀 참고]
 }

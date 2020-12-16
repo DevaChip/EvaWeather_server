@@ -10,10 +10,6 @@
 	<servlet>
 		<servlet-name>dispatcher</servlet-name>
 		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
-		<init-param>	<!-- 404에러를 잡기 위해 추가 -->
-			<param-name>throwExceptionIfNoHandlerFound</param-name>
-			<param-value>true</param-value>
-		</init-param>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
 

@@ -4,11 +4,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -17,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.devachip.evaweather.model.DataBean;
 import com.devachip.evaweather.model.UltraSrtNcstRequest;
 import com.devachip.evaweather.service.WeatherAPIService;
-import com.devachip.evaweather.vo.AreaLocation;
+import com.devachip.evaweather.vo.LocationInfo;
 
 @RestController
 public class WeatherAPIController {
@@ -31,16 +27,7 @@ public class WeatherAPIController {
 	}
 
 	@GetMapping(value = "nowWeather")
-	public String getVilageFcstInfo(@RequestParam(required=true) String areaCode) {
-		// 입력값 검증
-		Map<String, Object> reqMap = new HashMap<>();
-		reqMap.put("areaCode", areaCode);
-		String errorMsg = service.nowWeatherValidation(reqMap);
-		
-		if (StringUtils.isNotBlank(errorMsg)) {
-			return errorMsg;
-		}
-		
+	public String getVilageFcstInfo(@RequestParam String areaCode) {
 		// 현재 시간
 		DateFormat dFormat = new SimpleDateFormat("yyyyMMdd");
 		DateFormat tFormat = new SimpleDateFormat("HHmm");
@@ -60,15 +47,15 @@ public class WeatherAPIController {
 		}
 		
 		// 행정구역코드에 맞는 좌표 정보
-		AreaLocation areaLocation = DataBean.getAreaLocations().get(areaCode);
+		LocationInfo locationInfo = DataBean.getLocationInfoMap().get(areaCode);
 		
 		// 필수 입력값 설정
 		UltraSrtNcstRequest request = new UltraSrtNcstRequest(SERVICE_KEY, "1", "164", currentDate, currentTime);
 
-		// 옵션값 입력
+		// 옵션값 입력 설정
 		request.setDataType("JSON");
-		request.setNx(Optional.ofNullable(areaLocation.getNx()).orElse(60));
-		request.setNy(Optional.ofNullable(areaLocation.getNy()).orElse(127));
+		request.setNx(locationInfo.getNx());
+		request.setNy(locationInfo.getNy());
 
 		// API 통신
 		String result = service.getUltraSrtNcst(request);
