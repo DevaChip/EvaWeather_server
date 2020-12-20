@@ -15,4 +15,24 @@
 		<property name="prefix" value="/WEB-INF/views/" />
 		<property name="suffix" value=".jsp" />
 	</bean>
+	
+	<!-- 초단기실황 스케쥴러 -->
+	<bean id="ultraSrtNcst_Job" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject" ref="JobScheduler"/>
+		<property name="targetMethod" value="getUltraSrtNcsts"/>
+		<property name="concurrent" value="false"/>	<!-- 동시실행 방지 -->
+	</bean>
+	
+	<bean id="ultraSrtNcst_Trigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail" ref="ultraSrtNcst_Job"/>
+		<property name="cronExpression" value="0 0/10 * ?"></property>	<!-- 10분마다 -->
+	</bean>
+	
+	
+	<!-- 스케쥴러 전체 관리 -->
+	<bean id="jobScheduler" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<property name="triggers">
+			<list><ref bean="ultraSrtNcst_Trigger"/></list>
+		</property>
+	</bean>
 </beans>

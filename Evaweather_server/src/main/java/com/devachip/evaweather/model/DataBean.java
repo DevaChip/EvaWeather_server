@@ -1,6 +1,5 @@
 package com.devachip.evaweather.model;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -11,6 +10,7 @@ import org.apache.poi.openxml4j.util.ZipSecureFile;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.util.IOUtils;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.core.io.ClassPathResource;
@@ -131,13 +131,9 @@ public class DataBean {
 			System.out.println(e.fillInStackTrace());
 		} finally {
 			if (wb!=null) {
-				try {
-					// AutoCloseable 때문에 닫을 필요 없이 자원이 회수된다.
-					// warning 표시를 지우기 위해 추가함.
-					wb.close();
-				} catch(IOException e) {
-					System.out.println(e.fillInStackTrace());
-				}
+				// AutoCloseable 때문에 닫을 필요 없이 자원이 회수된다.
+				// warning 표시를 지우기 위해 추가함.
+				IOUtils.closeQuietly(wb);
 			}
 		}
 	}

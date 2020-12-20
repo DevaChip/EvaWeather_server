@@ -1,16 +1,19 @@
 package com.devachip.evaweather.service;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLEncoder;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.stereotype.Service;
 
-import com.devachip.evaweather.model.UltraSrtNcstRequest;
+import com.devachip.evaweather.dbconnect.DBConnect;
+import com.devachip.evaweather.model.VilageFcstRequest;
 
 /**
  * 날씨 API 받아오기
@@ -20,75 +23,48 @@ import com.devachip.evaweather.model.UltraSrtNcstRequest;
  */
 @Service
 public class WeatherAPIService {
-
 	/** 동네예보 조회서비스 */
-	// 초단기 실황 조회
-	public String getUltraSrtNcst(UltraSrtNcstRequest request) {
-		// 필요한 객체 선언 및 초기화(추후 전역으로 바꿀지 확인)
+	// 초단기실황
+	public String getNowWeather(VilageFcstRequest request) {
 		StringBuffer sb = new StringBuffer();
 
+		String selectSQL = "SELECT category, obsrValue FROM UltraSrtNcsts "
+				+ "WHERE baseDate=? AND baseTime=? AND nx=? AND ny=?";
+		
+		PreparedStatement psmt = null;
+		ResultSet rs = null;
 		try {
-			// URL 설정
-			/* 필수 */
-			sb.append("http://apis.data.go.kr/1360000/VilageFcstInfoService/getUltraSrtNcst"); /* URL */
-			sb.append("?" + URLEncoder.encode("ServiceKey", "UTF-8") + "=" + request.getServiceKey()); /* Service Key */
-			sb.append("&" + URLEncoder.encode("pageNo", "UTF-8") + "="
-					+ URLEncoder.encode(request.getPageNo(), "UTF-8")); /* 페이지번호 */
-			sb.append("&" + URLEncoder.encode("numOfRows", "UTF-8") + "="
-					+ URLEncoder.encode(request.getNumOfRows(), "UTF-8")); /* 한 페이지 결과 수 */
-			sb.append("&" + URLEncoder.encode("base_date", "UTF-8") + "="
-					+ URLEncoder.encode(request.getBaseDate(), "UTF-8")); /* 발표 날짜(yyyyMMdd) */
-			sb.append("&" + URLEncoder.encode("base_time", "UTF-8") + "="
-					+ URLEncoder.encode(request.getBaseTime(), "UTF-8")); /* 발표 시각(hhmm) */
-
-			/* 옵션 */
-			sb.append("&" + URLEncoder.encode("dataType", "UTF-8") + "="
-					+ URLEncoder.encode(request.getDataType(), "UTF-8")); /* 요청자료형식(XML/JSON)Default: XML */
-			sb.append("&" + URLEncoder.encode("nx", "UTF-8") + "="
-					+ URLEncoder.encode(request.getNx(), "UTF-8")); /* 예보지점의 X 좌표값 */
-			sb.append("&" + URLEncoder.encode("ny", "UTF-8") + "="
-					+ URLEncoder.encode(request.getNy(), "UTF-8")); /* 예보지점 Y 좌표 */
-
-			URL url = new URL(sb.toString()); // url 세팅
-
-			// Request 형식 설정
-			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-			conn.setConnectTimeout(5000); // 연결시간 timeOut
-			conn.setReadTimeout(5000); // InputStream 읽어오는 timeOut
-			conn.setRequestProperty("Content-type", "application/json"); // response data 타입 설정
-
-			conn.setRequestMethod("GET");
-			conn.setDoOutput(true);
-
-			int resCode = conn.getResponseCode();
-			BufferedReader br;
-			if (HttpURLConnection.HTTP_OK <= resCode && resCode <= HttpURLConnection.HTTP_MULT_CHOICE) {
-				br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-			} else {
-				br = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
+			psmt = DBConnect.getConnection().prepareStatement(selectSQL);
+			psmt.setString(1, request.getBaseDate());
+			psmt.setString(2, request.getBaseTime());
+			psmt.setInt(3, Integer.parseInt(request.getNx()));
+			psmt.setInt(4, Integer.parseInt(request.getNy()));
+			
+			rs = psmt.executeQuery();
+			Map<String, Object> map = new HashMap<>();
+			while(rs.next()) {
+				String category = rs.getString(1);
+				float obsrValue = rs.getFloat(2);
+				
+				map.put(category, obsrValue);
 			}
-
-			sb.setLength(0); // 버퍼 초기화
-			String line = "";
-			while ((line = br.readLine()) != null) {
-				sb.append(line);
-			}
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-
-			// 전달할 에러 메시지 설정
-			sb.setLength(0);
-			sb.append(e.toString());
+			
+			ObjectMapper mapper = new ObjectMapper();
+			String jsonString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(map);
+			sb.append(jsonString);
+		} catch (SQLException e) {
+			System.out.println(e.fillInStackTrace());
+		} catch (JsonGenerationException e) {
+			System.out.println(e.fillInStackTrace());
+		} catch (JsonMappingException e) {
+			System.out.println(e.fillInStackTrace());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-
-			// 전달할 에러 메시지 설정
-			sb.setLength(0);
-			sb.append(e.toString());
+			System.out.println(e.fillInStackTrace());
+		} finally {
+			DBConnect.close(rs);
+			DBConnect.close(psmt);
 		}
-
+		
 		return sb.toString();
 	}
 	/** 동네예보 조회서비스 끝 */
