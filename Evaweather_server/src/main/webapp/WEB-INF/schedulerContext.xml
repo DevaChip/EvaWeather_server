@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+
+	<!-- 초단기실황정보 업데이트 작업 -->
+	<bean id="job_ultraSrtNcst"
+		class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+		<property name="jobClass"
+			value="com.devachip.evaweather.scheduler.JobUltraSrtNcst"></property>
+	</bean>
+
+	<!-- 스케쥴러 전체 관리 -->
+	<bean id="schedulerFactory"
+		class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<property name="triggers">
+			<list>
+				<bean id="trigger_ultraSrtNcst"
+					class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+					<property name="name" value="job_ultraSrtNcst" />
+					<property name="jobDetail" ref="job_ultraSrtNcst" />
+					<property name="description" value="초단기실황 정보 업데이트" />
+					<property name="cronExpression" value="0 0/10 * * * ?"></property>	<!-- 10분마다 -->
+					<property name="misfireInstruction"
+						value="MISFIRE_INSTRUCTION_DO_NOTHING"></property>
+				</bean>
+			</list>
+		</property>
+	</bean>
+</beans>

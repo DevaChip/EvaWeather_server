@@ -1,4 +1,4 @@
-package com.devachip.evaweather.service;
+package com.devachip.evaweather.scheduler;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -20,7 +20,10 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
-import org.springframework.stereotype.Service;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
+import org.quartz.PersistJobDataAfterExecution;
+import org.springframework.scheduling.quartz.QuartzJobBean;
 
 import com.devachip.evaweather.dbconnect.DBConnect;
 import com.devachip.evaweather.model.DataBean;
@@ -31,9 +34,18 @@ import com.devachip.evaweather.vo.LocationInfo;
 /**
  * API 데이터수집 스케쥴러
  */
-@Service
-public class JobScheduler {
+@PersistJobDataAfterExecution
+public class JobUltraSrtNcst extends QuartzJobBean {
 	private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI9cAWdjV3xScZ6Sj9QFn4WL7pe8YldzB%2BZjrD1fVBrbNTS2pMDj6siAw%3D%3D";
+	
+	@Override
+	protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
+		String jobName = context.getJobDetail().getDescription();
+		
+		System.out.println(String.format("===================== [%s] START =====================", jobName));
+		getUltraSrtNcsts();
+		System.out.println(String.format("===================== [%s] END =====================", jobName));
+	}
 	
 	// 초단기실황 업데이트 | 추가
 	public void getUltraSrtNcsts() {
@@ -159,6 +171,7 @@ public class JobScheduler {
 	 * API 로부터 받아온 데이터를 객체화
 	 * @return 
 	 */
+	@SuppressWarnings("unchecked")
 	public List<UltraSrtNcst> jsonToList(String jsonString) {
 		ObjectMapper mapper = new ObjectMapper();
 		List<UltraSrtNcst> list = new ArrayList<>();
