@@ -11,6 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -56,9 +57,15 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 		// 현재 시간
 		DateFormat dFormat = new SimpleDateFormat("yyyyMMdd");
 		DateFormat tFormat = new SimpleDateFormat("HHmm");
+		
 		Date d = new Date();
-		String currentDate = dFormat.format(d); 
-		String currentTime = tFormat.format(d);
+		// TODO: 테스트용으로 1시간 이전 데이터를 읽어오도록 설정
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(d);
+//		cal.add(Calendar.HOUR, -1);
+		
+		String currentDate = dFormat.format(cal.getTime());
+		String currentTime = tFormat.format(cal.getTime());
 		
 		String schedulerName = "ultraSrtNcst_Scheduler";
 		DateFormat timeFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
@@ -169,16 +176,14 @@ public class JobUltraSrtNcst extends QuartzJobBean {
  				sb.append(line);
 			}
 		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println(e.fillInStackTrace());
 
 			// 전달할 에러 메시지 설정
 			sb.setLength(0);
 			sb.append(e.toString());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-
+			System.out.println(e.fillInStackTrace());
+			
 			// 전달할 에러 메시지 설정
 			sb.setLength(0);
 			sb.append(e.toString());
@@ -222,19 +227,38 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 				dtoMap.put("nx", item.get("nx"));
 				dtoMap.put("ny", item.get("ny"));
 				
-				dtoMap.put((String) item.get("category"), item.get("obsrValue"));
+				dtoMap.put((String) item.get("category"), Float.parseFloat((String) item.get("obsrValue")));
 			}
 			
-			UltraSrtNcst dto = mapper.convertValue(dtoMap, UltraSrtNcst.class);
+			// TODO: Unrecognized Field "PTY" 오류로 해당 코드 사용 안됨. 확인 필요.
+//			UltraSrtNcst dto = mapper.convertValue(dtoMap, UltraSrtNcst.class);
+			
+			UltraSrtNcst dto = new UltraSrtNcst();
+			dto.setBaseDate((String) dtoMap.get("baseDate"));
+			dto.setBaseTime((String) dtoMap.get("baseTime"));
+			dto.setNx((int) dtoMap.get("nx"));
+			dto.setNy((int) dtoMap.get("ny"));
+			
+			dto.setPTY((float) dtoMap.get("PTY"));
+			dto.setREH((float) dtoMap.get("REH"));
+			dto.setRN1((float) dtoMap.get("RN1"));
+			dto.setT1H((float) dtoMap.get("T1H"));
+			dto.setUUU((float) dtoMap.get("UUU"));
+			dto.setVEC((float) dtoMap.get("VEC"));
+			dto.setVVV((float) dtoMap.get("VVV"));
+			dto.setWSD((float) dtoMap.get("WSD"));
+			
 			resultMap.put("dto", dto);
 			return resultMap;
 		} catch(IOException e) {
 			System.out.println(e.fillInStackTrace());
+			resultMap = new HashMap<>();
 		} catch(Exception e) {
 			System.out.println(e.fillInStackTrace());
+			resultMap = new HashMap<>();
 		}
 		
-		return null;
+		return resultMap;
 	}
 	
 	@SuppressWarnings("resource")
@@ -243,7 +267,7 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 			return false;
 		}
 		
-		String updateSQL = "UPDATE UltraSrtNcsts SET (T1H, RN1, UUU, VVV, REH, PTY, VEC, WSD) = (?, ?, ?, ?, ?, ?, ?, ?) "
+		String updateSQL = "UPDATE UltraSrtNcsts SET T1H=?, RN1=?, UUU=?, VVV=?, REH=?, PTY=?, VEC=?, WSD=? "
 				+ "WHERE baseDate=? AND baseTime=? AND nx=? AND ny=?";
 		
 		String insertSQL = "INSERT INTO UltraSrtNcsts(baseDate, baseTime, nx, ny, T1H, RN1, UUU, VVV, REH, PTY, VEC, WSD) "
@@ -254,14 +278,14 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 		try {
 			// 업데이트
 			psmt = DBConnect.getConnection().prepareStatement(updateSQL);
-			psmt.setString(1, dto.getT1H());
-			psmt.setString(2, dto.getRN1());
-			psmt.setString(3, dto.getUUU());
-			psmt.setString(4, dto.getVVV());
-			psmt.setString(5, dto.getREH());
-			psmt.setString(6, dto.getPTY());
-			psmt.setString(7, dto.getVEC());
-			psmt.setString(8, dto.getWSD());
+			psmt.setFloat(1, dto.getT1H());
+			psmt.setFloat(2, dto.getRN1());
+			psmt.setFloat(3, dto.getUUU());
+			psmt.setFloat(4, dto.getVVV());
+			psmt.setFloat(5, dto.getREH());
+			psmt.setFloat(6, dto.getPTY());
+			psmt.setFloat(7, dto.getVEC());
+			psmt.setFloat(8, dto.getWSD());
 			
 			psmt.setString(9, dto.getBaseDate());
 			psmt.setString(10, dto.getBaseTime());
@@ -280,14 +304,14 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 			psmt.setInt(3, dto.getNx());
 			psmt.setInt(4, dto.getNy());
 			
-			psmt.setString(5, dto.getT1H());
-			psmt.setString(6, dto.getRN1());
-			psmt.setString(7, dto.getUUU());
-			psmt.setString(8, dto.getVVV());
-			psmt.setString(9, dto.getREH());
-			psmt.setString(10, dto.getPTY());
-			psmt.setString(11, dto.getVEC());
-			psmt.setString(12, dto.getWSD());
+			psmt.setFloat(5, dto.getT1H());
+			psmt.setFloat(6, dto.getRN1());
+			psmt.setFloat(7, dto.getUUU());
+			psmt.setFloat(8, dto.getVVV());
+			psmt.setFloat(9, dto.getREH());
+			psmt.setFloat(10, dto.getPTY());
+			psmt.setFloat(11, dto.getVEC());
+			psmt.setFloat(12, dto.getWSD());
 			
 			updatedRow = psmt.executeUpdate();
 			if (updatedRow==1) {
