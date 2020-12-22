@@ -23,7 +23,7 @@
 					<property name="description" value="초단기실황 정보 업데이트" />
 					<property name="cronExpression" value="0 0/10 * * * ?"></property>	<!-- 10분마다 -->
 					<property name="misfireInstruction"
-						value="MISFIRE_INSTRUCTION_DO_NOTHING"></property>
+						value="2"></property>
 				</bean>
 			</list>
 		</property>

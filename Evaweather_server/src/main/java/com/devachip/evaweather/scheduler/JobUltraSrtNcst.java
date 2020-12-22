@@ -11,8 +11,8 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,10 +40,14 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 	
 	@Override
 	protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
-		String jobName = context.getJobDetail().getDescription();
+		String jobName = context.getJobDetail().getKey().getName();
 		
 		System.out.println(String.format("===================== [%s] START =====================", jobName));
-		getUltraSrtNcsts();
+		if (DBConnect.getConnection() != null) {
+			getUltraSrtNcsts();
+		} else {
+			System.out.println("DB Connect Failed. Job Stop.");
+		}
 		System.out.println(String.format("===================== [%s] END =====================", jobName));
 	}
 	
@@ -62,6 +66,8 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 		System.out.println(String.format("[%s][Scheduler] %s Start", nowTime, schedulerName));
 		
 		Set<String> keys = DataBean.getLocationInfoMap().keySet();
+		System.out.println("locationInfoMap keys : " + keys.size());
+		int updatedRows = 0;
 		for (String key: keys) {
 			LocationInfo locationInfo = DataBean.getLocationInfoMap().get(key);
 					
@@ -80,16 +86,31 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 			// API와 통신
 			StringBuffer sb = new StringBuffer();
 			String apiName = "getUltraSrtNcst";
-			sb.append(getVilageFcst(apiName, request));
 			
+			String getResult = getVilageFcst(apiName, request);
+			sb.append(getResult);
+			
+			// API로부터 받은 데이터 파싱
+			Map<String, Object> resultMap = jsonToObject(sb.toString());
+			
+			// 데이터가 조회되지 않은 경우
+			if (!StringUtils.equals((String)resultMap.get("resultCode"), "00")) {
+				 System.out.println(String.format("[%s] No data was retrieved. Update Skip.", key));
+				continue;
+			}
+				
 			// 데이터 업데이트 | 삽입
-			List<UltraSrtNcst> dtoList = jsonToList(sb.toString());
-			boolean isUpdated = updateData(dtoList);
+			UltraSrtNcst dto = (UltraSrtNcst)resultMap.get("dto");
+			boolean isUpdated = updateData(dto);
 			
-			if (!isUpdated) {
+			if (isUpdated) {
+				updatedRows++;
+			} else {		
 				System.out.println(String.format("[%s] update Failed.", key));
-			}			
+			}
 		}
+		
+		System.out.println("updatedRows : " + updatedRows);
 		
 		Date afterD = new Date();
 		nowTime = timeFormat.format(afterD);
@@ -169,34 +190,44 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 	/**
 	 * JSON -> List
 	 * API 로부터 받아온 데이터를 객체화
-	 * @return 
+	 * 
+	 * @return Map{resultCode: 결과코드, dto: 초단기실황 데이터 객체} 
 	 */
 	@SuppressWarnings("unchecked")
-	public List<UltraSrtNcst> jsonToList(String jsonString) {
+	public Map<String, Object> jsonToObject(String jsonString) {
 		ObjectMapper mapper = new ObjectMapper();
-		List<UltraSrtNcst> list = new ArrayList<>();
+		Map<String, Object> resultMap = new HashMap<String, Object>();
+		
 		try {
 			Map<String, Object> map = mapper.readValue(jsonString, new TypeReference<Map<String, Object>>() {});
 			
 			map = (Map<String, Object>)map.get("response");
 			
-			// 데이터가 조회됬는지 확인
+			// 데이터가 조회됐는지 확인
 			Map<String, Object> header = (Map<String, Object>)map.get("header");
-			if ( !StringUtils.equals("00", (String)header.get("resultCode")) ) {	
-				return list;	// 조회되지 않은 경우 빈 리스트 리턴
+			String resultCode = (String)header.get("resultCode");
+			resultMap.put("resultCode", resultCode);
+			if ( !StringUtils.equals("00", resultCode) ) {	
+				return resultMap;
 			}
 			
 			map = (Map<String, Object>)map.get("body");
 			map = (Map<String, Object>)map.get("items");
 			List<Map<String, Object>> items = (List<Map<String, Object>>)map.get("item");
 			
+			Map<String, Object> dtoMap = new HashMap<>();
 			for (Map<String, Object> item: items) {
-				UltraSrtNcst dto = mapper.convertValue(item, UltraSrtNcst.class);
+				dtoMap.put("baseDate", item.get("baseDate"));
+				dtoMap.put("baseTime", item.get("baseTime"));
+				dtoMap.put("nx", item.get("nx"));
+				dtoMap.put("ny", item.get("ny"));
 				
-				list.add(dto);
+				dtoMap.put((String) item.get("category"), item.get("obsrValue"));
 			}
 			
-			return list;
+			UltraSrtNcst dto = mapper.convertValue(dtoMap, UltraSrtNcst.class);
+			resultMap.put("dto", dto);
+			return resultMap;
 		} catch(IOException e) {
 			System.out.println(e.fillInStackTrace());
 		} catch(Exception e) {
@@ -206,61 +237,70 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 		return null;
 	}
 	
-	public synchronized boolean updateData(List<UltraSrtNcst> dtoList) {
-		if (dtoList==null || dtoList.size()==0) {
-			return true;
-		}
-		
-		String insertSQL = "INSERT INTO UltraSrtNcsts(baseDate, baseTime, nx, ny, category, obsrValue) "
-				+ "VALUES(?, ?, ?, ?, ?, ?)";
-		
-		String updateSQL = "UPDATE UltraSrtNcsts SET obsrValue=? "
-				+ "WHERE baseDate=? AND baseTime=? AND nx=? AND ny=? AND category=?";
-		
-		PreparedStatement psmt = null;
-		int updatedCnt = 0;
-		int updatedRow = 0;
-		for (UltraSrtNcst dto: dtoList) {
-			try {
-				// 업데이트
-				psmt = DBConnect.getConnection().prepareStatement(updateSQL);
-				psmt.setFloat(1, dto.getObsrValue());
-				psmt.setString(2, dto.getBaseDate());
-				psmt.setString(3, dto.getBaseTime());
-				psmt.setInt(4, dto.getNx());
-				psmt.setInt(5, dto.getNy());
-				psmt.setString(6, dto.getCategory());
-				
-				updatedRow = psmt.executeUpdate();
-				if (updatedRow==1) {
-					updatedCnt++;
-					continue;
-				}				
-				
-				// 수정할 데이터가 없을 경우 추가
-				psmt = DBConnect.getConnection().prepareStatement(insertSQL);
-				psmt.setString(1, dto.getBaseDate());
-				psmt.setString(2, dto.getBaseTime());
-				psmt.setInt(3, dto.getNx());
-				psmt.setInt(4, dto.getNy());
-				psmt.setString(5, dto.getCategory());
-				psmt.setFloat(6, dto.getObsrValue());
-				
-				updatedRow = psmt.executeUpdate();
-				updatedCnt += updatedRow;
-			} catch (SQLException e){
-				System.out.println(e.fillInStackTrace());
-			}
-		}
-		
-		DBConnect.close(psmt);
-		
-		// 리스트 전부 업데이트되었다면 true
-		if (updatedCnt==dtoList.size()) {
-			return true;
-		} else {
+	@SuppressWarnings("resource")
+	public synchronized boolean updateData(UltraSrtNcst dto) {
+		if (dto==null) {
 			return false;
 		}
+		
+		String updateSQL = "UPDATE UltraSrtNcsts SET (T1H, RN1, UUU, VVV, REH, PTY, VEC, WSD) = (?, ?, ?, ?, ?, ?, ?, ?) "
+				+ "WHERE baseDate=? AND baseTime=? AND nx=? AND ny=?";
+		
+		String insertSQL = "INSERT INTO UltraSrtNcsts(baseDate, baseTime, nx, ny, T1H, RN1, UUU, VVV, REH, PTY, VEC, WSD) "
+				+ "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+		
+		PreparedStatement psmt = null;
+		int updatedRow = 0;
+		try {
+			// 업데이트
+			psmt = DBConnect.getConnection().prepareStatement(updateSQL);
+			psmt.setString(1, dto.getT1H());
+			psmt.setString(2, dto.getRN1());
+			psmt.setString(3, dto.getUUU());
+			psmt.setString(4, dto.getVVV());
+			psmt.setString(5, dto.getREH());
+			psmt.setString(6, dto.getPTY());
+			psmt.setString(7, dto.getVEC());
+			psmt.setString(8, dto.getWSD());
+			
+			psmt.setString(9, dto.getBaseDate());
+			psmt.setString(10, dto.getBaseTime());
+			psmt.setInt(11, dto.getNx());
+			psmt.setInt(12, dto.getNy());			
+			
+			updatedRow = psmt.executeUpdate();
+			if (updatedRow==1) {
+				return true;
+			}				
+			
+			// 수정할 데이터가 없을 경우 추가
+			psmt = DBConnect.getConnection().prepareStatement(insertSQL);
+			psmt.setString(1, dto.getBaseDate());
+			psmt.setString(2, dto.getBaseTime());
+			psmt.setInt(3, dto.getNx());
+			psmt.setInt(4, dto.getNy());
+			
+			psmt.setString(5, dto.getT1H());
+			psmt.setString(6, dto.getRN1());
+			psmt.setString(7, dto.getUUU());
+			psmt.setString(8, dto.getVVV());
+			psmt.setString(9, dto.getREH());
+			psmt.setString(10, dto.getPTY());
+			psmt.setString(11, dto.getVEC());
+			psmt.setString(12, dto.getWSD());
+			
+			updatedRow = psmt.executeUpdate();
+			if (updatedRow==1) {
+				return true;
+			}
+		} catch (SQLException e){
+			System.out.println(e.fillInStackTrace());
+		} finally {
+			// try 구문에서 중간에 return할 경우 리턴된 후 finally 코드가 실행된다.
+			DBConnect.close(psmt);	
+		}
+		
+		return false;
 	}
 	/** 동네예보 조회서비스 끝 */
 }
