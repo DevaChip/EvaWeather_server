@@ -34,6 +34,7 @@ public class DataBean {
 	
 	// 시트 구분
 	final int LOCATION_INFO_SHEET=0; // 지역 정보
+	final int LOCATION_INFO_TEST=1;	// 지역 정보 테스트 시트
 	
 	// 행 구분
 	final int LANG=0; 		// 구분
@@ -68,6 +69,7 @@ public class DataBean {
 		locationInfoMap = new HashMap<>();
 		XSSFWorkbook wb = null;
 		
+		System.out.println("==================== load LocationInfo Start ====================");
 		try {
 			String fileName = "LocationInfo.xlsx";
 			ClassPathResource resource = new ClassPathResource(fileName);
@@ -79,15 +81,21 @@ public class DataBean {
 			
 			wb = new XSSFWorkbook(is);
 			XSSFSheet sheet = wb.getSheetAt(LOCATION_INFO_SHEET);
+			System.out.println("Sheet rows: " + sheet.getLastRowNum());
 			
-			Row columnNames = sheet.getRow(0);
-			String[] cells = new String[columnNames.getLastCellNum()];	// row 당 셀 최대 갯수
-			
-			sheet.removeRow(columnNames);	// 첫 행(컬럼명) 삭제
-			for (Row row: sheet) {
+			Row colNamesRow = sheet.getRow(0);
+			String[] cells = new String[colNamesRow.getLastCellNum()];	// row 당 셀 최대 갯수(컬럼명 row는 빈 값이 없기 때문에 최대 갯수가 된다.)
+			int rowNum = 0;
+			for (rowNum=1; rowNum < sheet.getLastRowNum(); rowNum++) {	// 첫 행(컬럼명) 제외
+				Row row = sheet.getRow(rowNum);
+				if (row==null) {
+					System.out.println(String.format("[%d] row Data is Null.", rowNum));
+					continue;
+				}
+				
 				Arrays.fill(cells, "");
 				
-				for (int i=0; i < row.getLastCellNum(); i++) {
+				for (int i=0; i < cells.length; i++) {
 					Cell cell = row.getCell(i);
 					
 					switch(Optional.ofNullable(cell).map(Cell::getCellType).orElse(CellType.BLANK)) {
@@ -125,10 +133,13 @@ public class DataBean {
 						cells[NX], cells[NY], cells[LONGITUDE_H], cells[LONGITUDE_M], cells[LONGITUDE_S],
 						cells[LATITUDE_H], cells[LATITUDE_M], cells[LATITUDE_S],
 						cells[LONGITUDE_S_PER_HUNDRED], cells[LATITUDE_S_PER_HUNDRED], cells[LOCATION_UPDATE]);
+				
+				System.out.println("rows: " + Arrays.toString(cells));
 				locationInfoMap.put(cells[AREA_CODE], krAreaCode);
 			}
+			System.out.println(String.format("insertedRows: %d | loopCnt: %d", locationInfoMap.size(), rowNum));
 		} catch(Exception e) {
-			System.out.println(e.fillInStackTrace());
+			e.printStackTrace();
 		} finally {
 			if (wb!=null) {
 				// AutoCloseable 때문에 닫을 필요 없이 자원이 회수된다.
@@ -136,5 +147,7 @@ public class DataBean {
 				IOUtils.closeQuietly(wb);
 			}
 		}
+		
+		System.out.println("==================== load LocationInfo End ====================");
 	}
 }

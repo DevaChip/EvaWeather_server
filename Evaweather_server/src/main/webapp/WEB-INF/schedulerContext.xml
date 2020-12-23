@@ -21,7 +21,7 @@
 					<property name="name" value="job_ultraSrtNcst" />
 					<property name="jobDetail" ref="job_ultraSrtNcst" />
 					<property name="description" value="초단기실황 정보 업데이트" />
-					<property name="cronExpression" value="0 45 * * * ?"></property>	<!-- 10분마다 -->
+					<property name="cronExpression" value="0 0/10 * * * ?"></property>	<!-- 10분마다 -->
 					<property name="misfireInstruction"
 						value="2"></property>
 				</bean>

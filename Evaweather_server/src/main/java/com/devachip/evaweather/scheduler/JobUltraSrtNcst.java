@@ -39,6 +39,11 @@ import com.devachip.evaweather.vo.LocationInfo;
 public class JobUltraSrtNcst extends QuartzJobBean {
 	private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI9cAWdjV3xScZ6Sj9QFn4WL7pe8YldzB%2BZjrD1fVBrbNTS2pMDj6siAw%3D%3D";
 	
+	private final int DB_FAILED = 0;
+	private final int DB_INSERTED = 1;
+	private final int DB_UPDATED = 2;
+	
+	
 	@Override
 	protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
 		String jobName = context.getJobDetail().getKey().getName();
@@ -74,7 +79,9 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 		
 		Set<String> keys = DataBean.getLocationInfoMap().keySet();
 		System.out.println("locationInfoMap keys : " + keys.size());
+		
 		int updatedRows = 0;
+		int insertedRows = 0;
 		for (String key: keys) {
 			LocationInfo locationInfo = DataBean.getLocationInfoMap().get(key);
 					
@@ -108,16 +115,22 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 				
 			// 데이터 업데이트 | 삽입
 			UltraSrtNcst dto = (UltraSrtNcst)resultMap.get("dto");
-			boolean isUpdated = updateData(dto);
+			int dbResultCode = updateData(dto);
 			
-			if (isUpdated) {
+			switch(dbResultCode) {
+			case DB_UPDATED:
 				updatedRows++;
-			} else {		
+				break;
+			case DB_INSERTED:
+				insertedRows++;
+				break;
+			case DB_FAILED:
+			default:
 				System.out.println(String.format("[%s] update Failed.", key));
 			}
 		}
 		
-		System.out.println("updatedRows : " + updatedRows);
+		System.out.println(String.format("AllRows: %d, updatedRows: %d, insertedRows: %d",keys.size(), updatedRows, insertedRows));
 		
 		Date afterD = new Date();
 		nowTime = timeFormat.format(afterD);
@@ -261,10 +274,16 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 		return resultMap;
 	}
 	
+	/**
+	 * API 데이터 갱신 | 삽입
+	 * 
+	 * @param dto
+	 * @return DB 작업 코드값 {0:실패, 1:삽입, 2: 갱신}
+	 */
 	@SuppressWarnings("resource")
-	public synchronized boolean updateData(UltraSrtNcst dto) {
+	public synchronized int updateData(UltraSrtNcst dto) {
 		if (dto==null) {
-			return false;
+			return DB_FAILED;
 		}
 		
 		String updateSQL = "UPDATE UltraSrtNcsts SET T1H=?, RN1=?, UUU=?, VVV=?, REH=?, PTY=?, VEC=?, WSD=? "
@@ -294,7 +313,7 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 			
 			updatedRow = psmt.executeUpdate();
 			if (updatedRow==1) {
-				return true;
+				return DB_UPDATED;
 			}				
 			
 			// 수정할 데이터가 없을 경우 추가
@@ -315,7 +334,7 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 			
 			updatedRow = psmt.executeUpdate();
 			if (updatedRow==1) {
-				return true;
+				return DB_INSERTED;
 			}
 		} catch (SQLException e){
 			System.out.println(e.fillInStackTrace());
@@ -324,7 +343,7 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 			DBConnect.close(psmt);	
 		}
 		
-		return false;
+		return DB_FAILED;
 	}
 	/** 동네예보 조회서비스 끝 */
 }

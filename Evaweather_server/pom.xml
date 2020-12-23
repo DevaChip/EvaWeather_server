@@ -48,21 +48,21 @@
 	</dependency>
 	
 	<!-- https://mvnrepository.com/artifact/org.springframework/spring-context-support -->
-	<dependency>
+	<dependency>	<!-- Quartz 관련 spring 기능 -->
 	    <groupId>org.springframework</groupId>
 	    <artifactId>spring-context-support</artifactId>
 	    <version>${spring.version}</version>
 	</dependency>
 	
 	<!-- https://mvnrepository.com/artifact/org.springframework/spring-tx -->
-	<dependency>
+	<dependency>	<!-- Quartz 관련 spring 기능 -->
 	    <groupId>org.springframework</groupId>
 	    <artifactId>spring-tx</artifactId>
 	    <version>${spring.version}</version>
 	</dependency>
 		
 	
-	<dependency>
+	<dependency>	<!-- ObjectMapper 기능 -->
 	    <groupId>org.codehaus.jackson</groupId>
 	    <artifactId>jackson-mapper-asl</artifactId>
 	    <version>1.9.13</version>
@@ -70,14 +70,14 @@
 	
 	
 	<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
-	<dependency>
+	<dependency>	<!-- 문자열 관련 -->
 		<groupId>org.apache.commons</groupId>
 		<artifactId>commons-lang3</artifactId>
 		<version>3.11</version>
 	</dependency>
 	
 	<!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
-	<dependency>
+	<dependency>	<!-- 객체 관련 함수 -->
 	    <groupId>org.projectlombok</groupId>
 	    <artifactId>lombok</artifactId>
 	    <version>1.18.16</version>
@@ -85,7 +85,7 @@
 	</dependency>
 	
 	<!-- https://mvnrepository.com/artifact/org.apache.poi/poi-ooxml -->
-	<dependency>
+	<dependency>	<!-- 엑셀 파싱 -->
 	    <groupId>org.apache.poi</groupId>
 	    <artifactId>poi-ooxml</artifactId>
 	    <version>4.1.2</version>
@@ -99,7 +99,7 @@
 	</dependency>
 	
 	<!-- https://mvnrepository.com/artifact/org.quartz-scheduler/quartz -->
-	<dependency>
+	<dependency>	<!-- Quartz 스케쥴러 -->
 	    <groupId>org.quartz-scheduler</groupId>
 	    <artifactId>quartz</artifactId>
 	    <version>2.3.2</version>
