@@ -4,3 +4,11 @@ Evaweather_server/target/classes/com/devachip/evaweather/controller/WeatherAPICo
 Evaweather_server/target/classes/com/devachip/evaweather/model/UltraSrtNcstRequest.class
 
 Evaweather_server/target/classes/com/devachip/evaweather/service/WeatherAPIService.class
+
+Evaweather_server/.classpath
+
+*.class
+
+Evaweather_server/target/m2e-wtp/web-resources/META-INF/maven/com.devachip.evaweather/Evaweather_server/pom.properties
+
+Evaweather_server/target/m2e-wtp/web-resources/META-INF/maven/com.devachip.evaweather/Evaweather_server/pom.xml

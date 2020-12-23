@@ -23,11 +23,10 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-import org.quartz.PersistJobDataAfterExecution;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 
+import com.devachip.evaweather.bean.DataBean;
 import com.devachip.evaweather.dbconnect.DBConnect;
-import com.devachip.evaweather.model.DataBean;
 import com.devachip.evaweather.model.UltraSrtNcst;
 import com.devachip.evaweather.model.VilageFcstRequest;
 import com.devachip.evaweather.vo.LocationInfo;
@@ -35,13 +34,15 @@ import com.devachip.evaweather.vo.LocationInfo;
 /**
  * API 데이터수집 스케쥴러
  */
-@PersistJobDataAfterExecution
 public class JobUltraSrtNcst extends QuartzJobBean {
 	private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI9cAWdjV3xScZ6Sj9QFn4WL7pe8YldzB%2BZjrD1fVBrbNTS2pMDj6siAw%3D%3D";
 	
 	private final int DB_FAILED = 0;
 	private final int DB_INSERTED = 1;
 	private final int DB_UPDATED = 2;
+	
+	private final int CONNECT_TIMEOUT = 5000;
+	private final int READ_TIMEOUT = 5000;
 	
 	
 	@Override
@@ -82,6 +83,7 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 		
 		int updatedRows = 0;
 		int insertedRows = 0;
+		int failedRows = 0;
 		for (String key: keys) {
 			LocationInfo locationInfo = DataBean.getLocationInfoMap().get(key);
 					
@@ -98,18 +100,21 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 			request.setNy(locationInfo.getNy());
 
 			// API와 통신
-			StringBuffer sb = new StringBuffer();
 			String apiName = "getUltraSrtNcst";
-			
 			String getResult = getVilageFcst(apiName, request);
-			sb.append(getResult);
+			
+			if (getResult==null) {	// API 통신에 실패한 경우
+				System.out.println(String.format("[AreaCode: %s] Failed to receive response from server. Update Skip.", key));
+				failedRows++;
+				continue;
+			}
 			
 			// API로부터 받은 데이터 파싱
-			Map<String, Object> resultMap = jsonToObject(sb.toString());
+			Map<String, Object> resultMap = jsonToObject(getResult);
 			
-			// 데이터가 조회되지 않은 경우
-			if (!StringUtils.equals((String)resultMap.get("resultCode"), "00")) {
-				 System.out.println(String.format("[%s] No data was retrieved. Update Skip.", key));
+			// 통신은 성공했으나, 날씨 데이터를 받지 못한 경우
+			if (!StringUtils.equals((String) resultMap.get("resultCode"), "00")) {
+				failedRows++;
 				continue;
 			}
 				
@@ -130,15 +135,21 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 			}
 		}
 		
-		System.out.println(String.format("AllRows: %d, updatedRows: %d, insertedRows: %d",keys.size(), updatedRows, insertedRows));
+		System.out.println(String.format("AllRows: %d, updatedRows: %d, insertedRows: %d, failedRows: %d",keys.size(), updatedRows, insertedRows, failedRows));
 		
 		Date afterD = new Date();
 		nowTime = timeFormat.format(afterD);
 		System.out.println(String.format("[%s][Scheduler] %s End", nowTime, schedulerName));
 	}
 	
-	/** 동네예보 조회서비스 */
-	// 초단기실황, 초단기예보, 동네예보조회
+	
+	/**
+	 * 초단기실황, 초단기예보, 동네예보 조회 API 통신
+	 * 
+	 * @param apiName
+	 * @param request
+	 * @return	[통신 성공: String | 실패: null]
+	 */
 	public String getVilageFcst(String apiName, VilageFcstRequest request) {
 		StringBuffer sb = new StringBuffer();
 
@@ -168,8 +179,8 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 
 			// Request 형식 설정
 			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-			conn.setConnectTimeout(5000); // 연결시간 timeOut
-			conn.setReadTimeout(5000); // InputStream 읽어오는 timeOut
+			conn.setConnectTimeout(CONNECT_TIMEOUT); // 연결시간 timeOut
+			conn.setReadTimeout(READ_TIMEOUT); // InputStream 읽어오는 timeOut
 			conn.setRequestProperty("Content-type", "application/json"); // response data 타입 설정
 
 			conn.setRequestMethod("GET");
@@ -188,21 +199,15 @@ public class JobUltraSrtNcst extends QuartzJobBean {
  			while ((line = br.readLine()) != null) {
  				sb.append(line);
 			}
+ 			
+ 			return sb.toString();
 		} catch (MalformedURLException e) {
 			System.out.println(e.fillInStackTrace());
-
-			// 전달할 에러 메시지 설정
-			sb.setLength(0);
-			sb.append(e.toString());
 		} catch (IOException e) {
 			System.out.println(e.fillInStackTrace());
-			
-			// 전달할 에러 메시지 설정
-			sb.setLength(0);
-			sb.append(e.toString());
 		}
-
-		return sb.toString();
+		
+		return null;
 	}
 	
 	/**
@@ -213,8 +218,8 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 	 */
 	@SuppressWarnings("unchecked")
 	public Map<String, Object> jsonToObject(String jsonString) {
-		ObjectMapper mapper = new ObjectMapper();
 		Map<String, Object> resultMap = new HashMap<String, Object>();
+		ObjectMapper mapper = new ObjectMapper();
 		
 		try {
 			Map<String, Object> map = mapper.readValue(jsonString, new TypeReference<Map<String, Object>>() {});
@@ -345,5 +350,4 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 		
 		return DB_FAILED;
 	}
-	/** 동네예보 조회서비스 끝 */
 }

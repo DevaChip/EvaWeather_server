@@ -1,4 +1,4 @@
-package com.devachip.evaweather.model;
+package com.devachip.evaweather.bean;
 
 import java.io.InputStream;
 import java.util.Arrays;
@@ -81,15 +81,16 @@ public class DataBean {
 			
 			wb = new XSSFWorkbook(is);
 			XSSFSheet sheet = wb.getSheetAt(LOCATION_INFO_SHEET);
+			Row colNamesRow = sheet.getRow(0);
+			
+			String[] cells = new String[colNamesRow.getLastCellNum()];	// row 당 셀 최대 갯수(컬럼명 row는 빈 값이 없기 때문에 최대 갯수가 된다.)
+			
+			sheet.removeRow(colNamesRow);
 			System.out.println("Sheet rows: " + sheet.getLastRowNum());
 			
-			Row colNamesRow = sheet.getRow(0);
-			String[] cells = new String[colNamesRow.getLastCellNum()];	// row 당 셀 최대 갯수(컬럼명 row는 빈 값이 없기 때문에 최대 갯수가 된다.)
-			int rowNum = 0;
-			for (rowNum=1; rowNum < sheet.getLastRowNum(); rowNum++) {	// 첫 행(컬럼명) 제외
-				Row row = sheet.getRow(rowNum);
+			for (Row row : sheet) {
 				if (row==null) {
-					System.out.println(String.format("[%d] row Data is Null.", rowNum));
+					System.out.println("row Data is Null.");
 					continue;
 				}
 				
@@ -120,11 +121,9 @@ public class DataBean {
 				
 				// 숫자형 문자를 숫자로 인식하는 경우가 있다.
 				// 이 경우 정수에 소숫점이 붙어 잘못된 값이 나올 수 있기 때문에 정수형 문자열인 경우 소숫점을 제거한다.
-				int areaCode = (int)Double.parseDouble(cells[AREA_CODE]);
 				int nx = (int)Double.parseDouble(cells[NX]);
 				int ny = (int)Double.parseDouble(cells[NY]);
 				
-				cells[AREA_CODE] = String.valueOf(areaCode);
 				cells[NX] = String.valueOf(nx);
 				cells[NY] = String.valueOf(ny);
 				
@@ -134,10 +133,9 @@ public class DataBean {
 						cells[LATITUDE_H], cells[LATITUDE_M], cells[LATITUDE_S],
 						cells[LONGITUDE_S_PER_HUNDRED], cells[LATITUDE_S_PER_HUNDRED], cells[LOCATION_UPDATE]);
 				
-				System.out.println("rows: " + Arrays.toString(cells));
 				locationInfoMap.put(cells[AREA_CODE], krAreaCode);
 			}
-			System.out.println(String.format("insertedRows: %d | loopCnt: %d", locationInfoMap.size(), rowNum));
+			System.out.println("insertedRows: " + locationInfoMap.size());
 		} catch(Exception e) {
 			e.printStackTrace();
 		} finally {

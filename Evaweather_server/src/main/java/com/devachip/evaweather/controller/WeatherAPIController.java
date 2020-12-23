@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.devachip.evaweather.model.DataBean;
+import com.devachip.evaweather.bean.DataBean;
 import com.devachip.evaweather.model.VilageFcstRequest;
 import com.devachip.evaweather.service.WeatherAPIService;
 import com.devachip.evaweather.vo.LocationInfo;
