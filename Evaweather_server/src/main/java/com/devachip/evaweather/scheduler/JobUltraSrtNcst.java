@@ -11,7 +11,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -63,15 +62,11 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 		// 현재 시간
 		DateFormat dFormat = new SimpleDateFormat("yyyyMMdd");
 		DateFormat tFormat = new SimpleDateFormat("HHmm");
-		
+
 		Date d = new Date();
-		// TODO: 테스트용으로 1시간 이전 데이터를 읽어오도록 설정
-		Calendar cal = Calendar.getInstance();
-		cal.setTime(d);
-//		cal.add(Calendar.HOUR, -1);
 		
-		String currentDate = dFormat.format(cal.getTime());
-		String currentTime = tFormat.format(cal.getTime());
+		String currentDate = dFormat.format(d);
+		String currentTime = tFormat.format(d);
 		
 		String schedulerName = "ultraSrtNcst_Scheduler";
 		DateFormat timeFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");

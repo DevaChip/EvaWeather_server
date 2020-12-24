@@ -21,7 +21,7 @@ import com.devachip.evaweather.vo.LocationInfo;
 
 /**
  * API 조회에 필요한 데이터를 담고 있는 클래스
- * Spring Bean 등록하여 싱글톤으로 관리되도록 한다.
+ * Spring Bean 등록하여 서버 실행 시, 정보를 로딩하여 담고 있도록 한다.
  * 
  * 1. 행정구역코드 및 지역 정보(동네예보, 동네예보 통보문, 중기예보 API 조회 시, 사용됨.)
  * 
@@ -55,6 +55,9 @@ public class DataBean {
 	final int LOCATION_UPDATE=15;		// 위치업데이트	
 	
 	public DataBean() {
+		if (locationInfoMap != null) {	// 이미 로딩된 경우 생략
+			return;
+		}
 		loadLocationInfoMap();
 	}
 	
@@ -62,10 +65,7 @@ public class DataBean {
 		return locationInfoMap;
 	}
 	
-	private void loadLocationInfoMap() {
-		if (locationInfoMap != null) {	// 이미 로딩된 경우 생략
-			return;
-		}
+	private synchronized void loadLocationInfoMap() {
 		locationInfoMap = new HashMap<>();
 		XSSFWorkbook wb = null;
 		
