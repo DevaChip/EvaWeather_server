@@ -4,11 +4,25 @@
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 
 
-	<!-- 초단기실황정보 업데이트 작업 -->
+	<!-- 초단기실황 조회 작업 -->
 	<bean id="job_ultraSrtNcst"
 		class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
 		<property name="jobClass"
 			value="com.devachip.evaweather.scheduler.JobUltraSrtNcst"></property>
+	</bean>
+	
+	<!-- 초단기예보 조회 작업 -->
+	<bean id="job_ultraSrtFcst"
+		class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+		<property name="jobClass"
+			value="com.devachip.evaweather.scheduler.JobUltraSrtFcst"></property>
+	</bean>
+	
+	<!-- 동네예보 조회 작업 -->
+	<bean id="job_vilageFcst"
+		class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+		<property name="jobClass"
+			value="com.devachip.evaweather.scheduler.JobVilageFcst"></property>
 	</bean>
 
 	<!-- 스케쥴러 전체 관리 -->
@@ -21,7 +35,25 @@
 					<property name="name" value="job_ultraSrtNcst" />
 					<property name="jobDetail" ref="job_ultraSrtNcst" />
 					<property name="description" value="초단기실황 정보 업데이트" />
-					<property name="cronExpression" value="0 20/10 * * * ?"></property>	<!-- 30분부터 10분마다 -->
+					<property name="cronExpression" value="0 30/10 * * * ?"></property>	<!-- 30분부터 10분마다 -->
+					<property name="misfireInstruction"
+						value="2"></property>
+				</bean>
+				<bean id="trigger_ultraSrtFcst"
+					class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+					<property name="name" value="job_ultraSrtFcst" />
+					<property name="jobDetail" ref="job_ultraSrtFcst" />
+					<property name="description" value="초단기예보 정보 업데이트" />
+					<property name="cronExpression" value="0 30 0/1 * * ?"></property>	<!-- 매 시각 30분 -->
+					<property name="misfireInstruction"
+						value="2"></property>
+				</bean>
+				<bean id="trigger_vilageFcst"
+					class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+					<property name="name" value="job_vilageFcst" />
+					<property name="jobDetail" ref="job_vilageFcst" />
+					<property name="description" value="동네예보 정보 업데이트" />
+					<property name="cronExpression" value="0 0 2/3 * * ?"></property>	<!-- 2시부터 3시간마다 -->
 					<property name="misfireInstruction"
 						value="2"></property>
 				</bean>

@@ -34,7 +34,7 @@ public class DataBean {
 	
 	// 시트 구분
 	final int LOCATION_INFO_SHEET=0; // 지역 정보
-	final int LOCATION_INFO_TEST=1;	// 지역 정보 테스트 시트
+	final int TEST_SHEET=1;	// 테스트 시트
 	
 	// 행 구분
 	final int LANG=0; 		// 구분
@@ -77,7 +77,7 @@ public class DataBean {
 			
 			// .xlsx 파일의 행,열이 너무 많을 경우 Zip bomb 공격으로 인식함.
 			// 이를 해결하기 위해 아래 설정 추가
-			ZipSecureFile.setMinInflateRatio(0);	 
+			ZipSecureFile.setMinInflateRatio(0);
 			
 			wb = new XSSFWorkbook(is);
 			XSSFSheet sheet = wb.getSheetAt(LOCATION_INFO_SHEET);

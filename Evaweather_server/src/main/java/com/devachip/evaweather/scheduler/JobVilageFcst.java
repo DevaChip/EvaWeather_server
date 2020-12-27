@@ -26,15 +26,15 @@ import org.springframework.scheduling.quartz.QuartzJobBean;
 
 import com.devachip.evaweather.bean.DataBean;
 import com.devachip.evaweather.dbconnect.DBConnect;
-import com.devachip.evaweather.model.UltraSrtNcst;
+import com.devachip.evaweather.model.VilageFcst;
 import com.devachip.evaweather.model.VilageFcstRequest;
 import com.devachip.evaweather.vo.LocationInfo;
 
 /**
- * 초단기실황 데이터 수집 스케쥴러
+ * 동네예보 조회 데이터 수집 스케쥴러
  */
-public class JobUltraSrtNcst extends QuartzJobBean {
-	private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI9cAWdjV3xScZ6Sj9QFn4WL7pe8YldzB%2BZjrD1fVBrbNTS2pMDj6siAw%3D%3D";
+public class JobVilageFcst extends QuartzJobBean{
+private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI9cAWdjV3xScZ6Sj9QFn4WL7pe8YldzB%2BZjrD1fVBrbNTS2pMDj6siAw%3D%3D";
 	
 	private final int DB_FAILED = 0;
 	private final int DB_INSERTED = 1;
@@ -50,7 +50,7 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 		
 		System.out.println(String.format("===================== [%s] START =====================", jobName));
 		if (DBConnect.getConnection() != null) {
-			getUltraSrtFcsts();
+			getVilageFcst();
 		} else {
 			System.out.println("DB Connect Failed. Job Stop.");
 		}
@@ -58,7 +58,7 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 	}
 	
 	// 초단기실황 업데이트 | 추가
-	public void getUltraSrtFcsts() {
+	public void getVilageFcst() {
 		// 현재 시간
 		DateFormat dFormat = new SimpleDateFormat("yyyyMMdd");
 		DateFormat tFormat = new SimpleDateFormat("HHmm");
@@ -68,7 +68,7 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 		String currentDate = dFormat.format(d);
 		String currentTime = tFormat.format(d);
 		
-		String schedulerName = "ultraSrtFcst_Scheduler";
+		String schedulerName = "vilageFcst_Scheduler";
 		DateFormat timeFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		String nowTime = timeFormat.format(d);
 		System.out.println(String.format("[AreaCode: %s][Scheduler] %s Start", nowTime, schedulerName));
@@ -95,7 +95,7 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 			request.setNy(locationInfo.getNy());
 
 			// API와 통신
-			String apiName = "getUltraSrtFcst";
+			String apiName = "getVilageFcst";
 			String getResult = getVilageFcstData(apiName, request);
 			
 			if (getResult==null) {	// API 통신에 실패한 경우
@@ -119,7 +119,7 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 			}
 				
 			// 데이터 업데이트 | 삽입
-			UltraSrtNcst dto = (UltraSrtNcst)resultMap.get("dto");
+			VilageFcst dto = (VilageFcst)resultMap.get("dto");
 			int dbResultCode = updateData(dto);
 			
 			switch(dbResultCode) {
@@ -230,6 +230,7 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 			Map<String, Object> header = (Map<String, Object>)map.get("header");
 			String resultCode = (String)header.get("resultCode");
 			resultMap.put("resultCode", resultCode);
+			resultMap.put("resultMsg", (String)header.get("resultMsg"));
 			if ( !StringUtils.equals("00", resultCode) ) {	
 				return resultMap;
 			}
@@ -240,30 +241,36 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 			
 			Map<String, Object> dtoMap = new HashMap<>();
 			for (Map<String, Object> item: items) {
-				dtoMap.put("baseDate", item.get("baseDate"));
-				dtoMap.put("baseTime", item.get("baseTime"));
+				dtoMap.put("fcstDate", item.get("fcstDate"));
+				dtoMap.put("fcstTime", item.get("fcstTime"));
 				dtoMap.put("nx", item.get("nx"));
 				dtoMap.put("ny", item.get("ny"));
 				
-				dtoMap.put((String) item.get("category"), Float.parseFloat((String) item.get("obsrValue")));
+				dtoMap.put((String) item.get("category"), Float.parseFloat((String) item.get("fcstValue")));
 			}
 			
 			// TODO: Unrecognized Field "PTY" 오류로 해당 코드 사용 안됨. 확인 필요.
-//			UltraSrtNcst dto = mapper.convertValue(dtoMap, UltraSrtNcst.class);
+//			VilageFcst dto = mapper.convertValue(dtoMap, VilageFcst.class);
 			
-			UltraSrtNcst dto = new UltraSrtNcst();
-			dto.setBaseDate((String) dtoMap.get("baseDate"));
-			dto.setBaseTime((String) dtoMap.get("baseTime"));
+			VilageFcst dto = new VilageFcst();
+			dto.setFcstDate((String) dtoMap.get("fcstDate"));
+			dto.setFcstTime((String) dtoMap.get("fcstTime"));
 			dto.setNx((int) dtoMap.get("nx"));
 			dto.setNy((int) dtoMap.get("ny"));
 			
+			dto.setPOP((float) dtoMap.get("POP"));
 			dto.setPTY((float) dtoMap.get("PTY"));
+			dto.setR06((float) dtoMap.get("R06"));
 			dto.setREH((float) dtoMap.get("REH"));
-			dto.setRN1((float) dtoMap.get("RN1"));
-			dto.setT1H((float) dtoMap.get("T1H"));
+			dto.setS06((float) dtoMap.get("S06"));
+			dto.setSKY((float) dtoMap.get("SKY"));
+			dto.setT3H((float) dtoMap.get("T3H"));
+			dto.setTMN((float) dtoMap.get("TMN"));
+			dto.setTMX((float) dtoMap.get("TMX"));
 			dto.setUUU((float) dtoMap.get("UUU"));
-			dto.setVEC((float) dtoMap.get("VEC"));
 			dto.setVVV((float) dtoMap.get("VVV"));
+			dto.setWAV((float) dtoMap.get("WAV"));
+			dto.setVEC((float) dtoMap.get("VEC"));
 			dto.setWSD((float) dtoMap.get("WSD"));
 			
 			resultMap.put("dto", dto);
@@ -286,35 +293,40 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 	 * @return DB 작업 코드값 {0:실패, 1:삽입, 2: 갱신}
 	 */
 	@SuppressWarnings("resource")
-	public synchronized int updateData(UltraSrtNcst dto) {
+	public synchronized int updateData(VilageFcst dto) {
 		if (dto==null) {
 			return DB_FAILED;
 		}
 		
-		String updateSQL = "UPDATE UltraSrtNcsts SET T1H=?, RN1=?, UUU=?, VVV=?, REH=?, PTY=?, VEC=?, WSD=? "
-				+ "WHERE baseDate=? AND baseTime=? AND nx=? AND ny=?";
+		String updateSQL = "UPDATE VilageFcsts SET POP=?, PTY=?, R06=?, REH=?, S06=?, SKY=?, T3H=?, TMN=?, TMX=?, UUU=?, VVV=?, WAV=?, VEC=?, WSD=? "
+				+ "WHERE fcstDate=? AND fcstTime=? AND nx=? AND ny=?";
 		
-		String insertSQL = "INSERT INTO UltraSrtNcsts(baseDate, baseTime, nx, ny, T1H, RN1, UUU, VVV, REH, PTY, VEC, WSD) "
-				+ "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+		String insertSQL = "INSERT INTO VilageFcsts(fcstDate, fcstTime, nx, ny, POP, PTY, R06, REH, S06, SKY, T3H, TMN, TMX, UUU, VVV, WAV, VEC, WSD) "
+				+ "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		
 		PreparedStatement psmt = null;
 		int updatedRow = 0;
 		try {
 			// 업데이트
 			psmt = DBConnect.getConnection().prepareStatement(updateSQL);
-			psmt.setFloat(1, dto.getT1H());
-			psmt.setFloat(2, dto.getRN1());
-			psmt.setFloat(3, dto.getUUU());
-			psmt.setFloat(4, dto.getVVV());
-			psmt.setFloat(5, dto.getREH());
-			psmt.setFloat(6, dto.getPTY());
-			psmt.setFloat(7, dto.getVEC());
-			psmt.setFloat(8, dto.getWSD());
-			
-			psmt.setString(9, dto.getBaseDate());
-			psmt.setString(10, dto.getBaseTime());
-			psmt.setInt(11, dto.getNx());
-			psmt.setInt(12, dto.getNy());			
+			psmt.setFloat(1, dto.getPOP());
+			psmt.setFloat(2, dto.getPTY());
+			psmt.setFloat(3, dto.getR06());
+			psmt.setFloat(4, dto.getREH());
+			psmt.setFloat(5, dto.getS06());
+			psmt.setFloat(6, dto.getSKY());
+			psmt.setFloat(7, dto.getT3H());
+			psmt.setFloat(8, dto.getTMN());
+			psmt.setFloat(9, dto.getTMX());
+			psmt.setFloat(10, dto.getUUU());
+			psmt.setFloat(11, dto.getVVV());
+			psmt.setFloat(12, dto.getWAV());
+			psmt.setFloat(13, dto.getVEC());
+			psmt.setFloat(14, dto.getWSD());
+			psmt.setString(15, dto.getFcstDate());
+			psmt.setString(16, dto.getFcstTime());
+			psmt.setInt(17, dto.getNx());
+			psmt.setInt(18, dto.getNy());
 			
 			updatedRow = psmt.executeUpdate();
 			if (updatedRow==1) {
@@ -323,19 +335,25 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 			
 			// 수정할 데이터가 없을 경우 추가
 			psmt = DBConnect.getConnection().prepareStatement(insertSQL);
-			psmt.setString(1, dto.getBaseDate());
-			psmt.setString(2, dto.getBaseTime());
+			psmt.setString(1, dto.getFcstDate());
+			psmt.setString(2, dto.getFcstTime());
 			psmt.setInt(3, dto.getNx());
 			psmt.setInt(4, dto.getNy());
 			
-			psmt.setFloat(5, dto.getT1H());
-			psmt.setFloat(6, dto.getRN1());
-			psmt.setFloat(7, dto.getUUU());
-			psmt.setFloat(8, dto.getVVV());
-			psmt.setFloat(9, dto.getREH());
-			psmt.setFloat(10, dto.getPTY());
-			psmt.setFloat(11, dto.getVEC());
-			psmt.setFloat(12, dto.getWSD());
+			psmt.setFloat(5, dto.getPOP());
+			psmt.setFloat(6, dto.getPTY());
+			psmt.setFloat(7, dto.getR06());
+			psmt.setFloat(8, dto.getREH());
+			psmt.setFloat(9, dto.getS06());
+			psmt.setFloat(10, dto.getSKY());
+			psmt.setFloat(11, dto.getT3H());
+			psmt.setFloat(12, dto.getTMN());
+			psmt.setFloat(13, dto.getTMX());
+			psmt.setFloat(14, dto.getUUU());
+			psmt.setFloat(15, dto.getVVV());
+			psmt.setFloat(16, dto.getWAV());
+			psmt.setFloat(17, dto.getVEC());
+			psmt.setFloat(18, dto.getWSD());
 			
 			updatedRow = psmt.executeUpdate();
 			if (updatedRow==1) {

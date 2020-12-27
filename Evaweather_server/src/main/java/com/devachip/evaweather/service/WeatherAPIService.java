@@ -55,9 +55,11 @@ public class WeatherAPIService {
 		
 		StringBuffer sb = new StringBuffer();
 
-		String selectSQL = "SELECT T1H as currentTemperature, PTY as pty, RN1 as rn1, REH as sd, WSD as windSpeed, VEC as windVector "
-				+ "FROM UltraSrtNcsts "
-				+ "WHERE baseDate=? AND baseTime=? AND nx=? AND ny=?";
+		String selectSQL = "select ifnull(usn.T1H, usf.T1H) as currentTemperature, ifnull(usn.PTY, usf.PTY) as pty, ifnull(usn.RN1, usf.RN1) as rn1, ifnull(usn.REH, usf.REH)  as sd, "
+				+ "	   ifnull(usn.WSD, usf.WSD) as windSpeed, ifnull(usn.VEC, usf.VEC) as windVector, usf.SKY as sky "
+				+ "from ultrasrtfcsts usf "
+				+ "left join ultrasrtncsts usn on usf.fcstDate = usn.baseDate and usf.fcstTime = usn.baseTime "
+				+ "where usf.fcstDate=? and usf.fcstTime=? and usf.nx=? and usf.ny=?";
 		
 		PreparedStatement psmt = null;
 		ResultSet rs = null;
@@ -78,6 +80,7 @@ public class WeatherAPIService {
 			float sd = 0;
 			float windSpeed = 0;
 			String windVector = "";
+			float sky = 0;
 			String[] VEC = {"N", "NNE", "NE", "ENE", 
 							"E", "ESE", "SE", "SSE", 
 							"S", "SSW", "SW", "WSW", 
@@ -94,15 +97,28 @@ public class WeatherAPIService {
 				                 .map(x-> (int)((x+11.25)/22.5))
 				                 .map(x -> VEC[x])
 				                 .orElse("");
+				sky = rs.getFloat(7);
 			}
 			
-			String locationName = StringUtils.join(new String[] { locationInfo.getFirstArea(),
-																  locationInfo.getSecondArea(), 
-																  locationInfo.getThirdArea() }, 
-													" ").trim();
+			String locationName = StringUtils.join(
+					new String[] { locationInfo.getFirstArea(), locationInfo.getSecondArea(), locationInfo.getThirdArea() }, " ")
+					.trim();
 			
-			NowWeather dto = new NowWeather(areaCode, locationName, currentTemperature, pty, rn1, 
-											sd, windSpeed, windVector);
+			NowWeather dto = new NowWeather();
+			
+			dto.setAreaCode(areaCode);
+			dto.setLocationName(locationName);
+
+			// 초단기실황 | 초단기예보
+			dto.setCurrentTemperature(currentTemperature);
+			dto.setPty(pty);
+			dto.setRn1(rn1);
+			dto.setSd(sd);
+			dto.setWindSpeed(windSpeed);
+			dto.setWindVector(windVector);
+			
+			// 초단기예보
+			dto.setSky(sky);
 			
 			String jsonString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(dto);
 			sb.append(jsonString);
