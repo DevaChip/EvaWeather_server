@@ -1,8 +1,10 @@
 package com.devachip.evaweather.bean;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -31,6 +33,7 @@ import com.devachip.evaweather.vo.LocationInfo;
 @Component
 public class DataBean {
 	private static Map<String, LocationInfo> locationInfoMap;	// 지역 정보
+	private static List<LocationInfo> locationInfoList_schedule;	// nx, ny 중복값을 제거한 정보
 	
 	// 시트 구분
 	final int LOCATION_INFO_SHEET=0; // 지역 정보
@@ -54,6 +57,11 @@ public class DataBean {
 	final int LATITUDE_S_PER_HUNDRED=14;	// 위도 (초/100)
 	final int LOCATION_UPDATE=15;		// 위치업데이트	
 	
+	// NX, NY 최대값 +1
+	// 편의를 위해 +1 하여 최대값까지 인덱스로 사용할 수 있도록 설정함
+	final int NX_MAX = 145;
+	final int NY_MAX = 148;
+	
 	public DataBean() {
 		if (locationInfoMap != null) {	// 이미 로딩된 경우 생략
 			return;
@@ -65,8 +73,17 @@ public class DataBean {
 		return locationInfoMap;
 	}
 	
+	public static List<LocationInfo> getLocationInfoList_schedule() {
+		return locationInfoList_schedule;
+	}
+	
 	private synchronized void loadLocationInfoMap() {
 		locationInfoMap = new HashMap<>();
+		
+		// 스케줄 전용 데이터 -> 중복되는 nx, ny 값을 제거하여 API 호출 횟수를 줄이기 위해 추가함.
+		locationInfoList_schedule = new ArrayList<>();
+		LocationInfo[][] scheduleArr = new LocationInfo[NX_MAX][NY_MAX];
+		
 		XSSFWorkbook wb = null;
 		
 		System.out.println("==================== load LocationInfo Start ====================");
@@ -134,8 +151,20 @@ public class DataBean {
 						cells[LONGITUDE_S_PER_HUNDRED], cells[LATITUDE_S_PER_HUNDRED], cells[LOCATION_UPDATE]);
 				
 				locationInfoMap.put(cells[AREA_CODE], krAreaCode);
+				scheduleArr[nx][ny] = krAreaCode;
 			}
 			System.out.println("insertedRows: " + locationInfoMap.size());
+			
+			for (int nx=0; nx < NX_MAX; nx++) {
+				for (int ny=0; ny < NY_MAX; ny++) {
+					if (scheduleArr[nx][ny]==null) {
+						continue;
+					}
+					
+					locationInfoList_schedule.add(scheduleArr[nx][ny]);
+				}
+			}
+			System.out.println("inserted Schedule Rows: " + locationInfoList_schedule.size());
 		} catch(Exception e) {
 			e.printStackTrace();
 		} finally {

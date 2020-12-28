@@ -29,13 +29,18 @@ import com.devachip.evaweather.vo.LocationInfo;
  */
 @Service
 public class WeatherAPIService {
-	public String getNowWeather(String areaCode) {
+	public String getNowWeather(String areaCode, String time) {
 		// 현재 시간
 		DateFormat dFormat = new SimpleDateFormat("yyyyMMdd");
 		DateFormat tFormat = new SimpleDateFormat("HHmm");
 		Date d = new Date();
 		String currentDate = dFormat.format(d); 
 		String currentTime = tFormat.format(d);
+		
+		// TODO: 테스트용 코드, 최종본에선 삭제할 것
+		if (StringUtils.isNotBlank(time)) {
+			currentTime = time;
+		}
 		
 		// 현재시간 기준 가장 최근 정시를 기준으로 조회 
 		String timePtn = "([0-1]{1}[0-9]{1}|2[0-3]{1})00";

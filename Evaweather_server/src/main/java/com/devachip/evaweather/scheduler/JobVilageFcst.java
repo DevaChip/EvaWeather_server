@@ -15,7 +15,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -46,11 +45,12 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 	
 	@Override
 	protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
-		String jobName = context.getJobDetail().getKey().getName();
+		String jobName = context.getJobDetail().getJobDataMap().getString("jobName");
+		String jobDetail = context.getJobDetail().getKey().getName();
 		
 		System.out.println(String.format("===================== [%s] START =====================", jobName));
 		if (DBConnect.getConnection() != null) {
-			getVilageFcst();
+			getVilageFcst(jobDetail);
 		} else {
 			System.out.println("DB Connect Failed. Job Stop.");
 		}
@@ -58,7 +58,7 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 	}
 	
 	// 초단기실황 업데이트 | 추가
-	public void getVilageFcst() {
+	public void getVilageFcst(String jobDetail) {
 		// 현재 시간
 		DateFormat dFormat = new SimpleDateFormat("yyyyMMdd");
 		DateFormat tFormat = new SimpleDateFormat("HHmm");
@@ -68,21 +68,15 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 		String currentDate = dFormat.format(d);
 		String currentTime = tFormat.format(d);
 		
-		String schedulerName = "vilageFcst_Scheduler";
 		DateFormat timeFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		String nowTime = timeFormat.format(d);
-		System.out.println(String.format("[AreaCode: %s][Scheduler] %s Start", nowTime, schedulerName));
-		
-		Set<String> keys = DataBean.getLocationInfoMap().keySet();
-		System.out.println("locationInfoMap keys : " + keys.size());
+		System.out.println(String.format("[%s][Scheduler] %s Start", nowTime, jobDetail));
 		
 		int updatedRows = 0;
 		int insertedRows = 0;
 		int failedRows = 0;
 		VilageFcstRequest request = new VilageFcstRequest();
-		for (String key: keys) {
-			LocationInfo locationInfo = DataBean.getLocationInfoMap().get(key);
-					
+		for (LocationInfo info : DataBean.getLocationInfoList_schedule()) {
 			// 필수 입력값 설정
 			request.setPageNo("1");
 			request.setNumOfRows("9999");
@@ -91,15 +85,15 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 
 			// 옵션값 입력 설정
 			request.setDataType("JSON");
-			request.setNx(locationInfo.getNx());
-			request.setNy(locationInfo.getNy());
+			request.setNx(info.getNx());
+			request.setNy(info.getNy());
 
 			// API와 통신
 			String apiName = "getVilageFcst";
 			String getResult = getVilageFcstData(apiName, request);
 			
 			if (getResult==null) {	// API 통신에 실패한 경우
-				System.out.println(String.format("[AreaCode: %s] Failed to receive response from server. Update Skip.", key));
+				System.out.println(String.format("(%s, %s) Failed to receive response from server. Update Skip.", info.getNx(), info.getNy()));
 				failedRows++;
 				continue;
 			}
@@ -109,11 +103,11 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 			
 			// 에러 코드 분류
 			String resultCode = (String) resultMap.get("resultCode");
-			if (StringUtils.equals(resultCode, "03")) {
+			if (StringUtils.equals(resultCode, "03") || StringUtils.equals(resultCode, "99")) {
 				System.out.println("No data has been generated for the current time. Job Stop.");
 				break;
 			} else if (!StringUtils.equals(resultCode, "00")) {
-				System.out.println(String.format("[AreaCode: %s] %s. Update Skip.", key, (String) resultMap.get("resultMsg")));
+				System.out.println(String.format("(%s, %s) %s. Update Skip.", info.getNx(), info.getNy(), (String) resultMap.get("resultMsg")));
 				failedRows++;
 				continue;
 			}
@@ -131,15 +125,16 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 				break;
 			case DB_FAILED:
 			default:
-				System.out.println(String.format("[AreaCode: %s] DB update Failed.", key));
+				System.out.println(String.format("(%s, %s) DB update Failed.", info.getNx(), info.getNy()));
 			}
 		}
 		
-		System.out.println(String.format("AllRows: %d, updatedRows: %d, insertedRows: %d, failedRows: %d",keys.size(), updatedRows, insertedRows, failedRows));
+		System.out.println(String.format("AllRows: %d, updatedRows: %d, insertedRows: %d, failedRows: %d",
+				DataBean.getLocationInfoList_schedule().size(), updatedRows, insertedRows, failedRows));
 		
 		Date afterD = new Date();
 		nowTime = timeFormat.format(afterD);
-		System.out.println(String.format("[AreaCode: %s][Scheduler] %s End", nowTime, schedulerName));
+		System.out.println(String.format("[%s][Scheduler] %s End", nowTime, jobDetail));
 	}
 	
 	
