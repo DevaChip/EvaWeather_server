@@ -39,21 +39,23 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 	private final int DB_INSERTED = 1;
 	private final int DB_UPDATED = 2;
 	
-	private final int CONNECT_TIMEOUT = 5000;
-	private final int READ_TIMEOUT = 5000;
+	private final int CONNECT_TIMEOUT = 10000;
+	private final int READ_TIMEOUT = 10000;
 	
+	private StringBuffer sb = new StringBuffer();
 	
 	@Override
 	protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
-		String jobName = context.getJobDetail().getJobDataMap().getString("jobName");
+		String jobName = context.getJobDetail().getKey().getName();
 		String jobDetail = context.getJobDetail().getKey().getName();
 		
 		System.out.println(String.format("===================== [%s] START =====================", jobName));
 		if (DBConnect.getConnection() != null) {
 			getUltraSrtNcsts(jobDetail);
 		} else {
-			System.out.println("DB Connect Failed. Job Stop.");
+			sb.append("DB Connect Failed. Job Stop.\n");
 		}
+		System.out.println(sb.toString());
 		System.out.println(String.format("===================== [%s] END =====================", jobName));
 	}
 	
@@ -70,8 +72,7 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 		
 		DateFormat timeFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		String nowTime = timeFormat.format(d);
-		System.out.println(String.format("[%s][Scheduler] %s Start", nowTime, jobDetail));
-
+		sb.append(String.format("[%s][Scheduler] %s Start", nowTime, jobDetail)).append("\n");
 		
 		int updatedRows = 0;
 		int insertedRows = 0;
@@ -94,7 +95,7 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 			String getResult = getVilageFcstData(apiName, request);
 			
 			if (getResult==null) {	// API 통신에 실패한 경우
-				System.out.println(String.format("(%s, %s) Failed to receive response from server. Update Skip.", info.getNx(), info.getNy()));
+				sb.append(String.format("(%s, %s) Failed to receive response from server. Update Skip.", info.getNx(), info.getNy())).append("\n");
 				failedRows++;
 				continue;
 			}
@@ -105,10 +106,10 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 			// 에러 코드 분류
 			String resultCode = (String) resultMap.get("resultCode");
 			if (StringUtils.equals(resultCode, "03")) {
-				System.out.println("No data has been generated for the current time. Job Stop.");
+				sb.append("No data has been generated for the current time. Job Stop.").append("\n");
 				break;
 			} else if (!StringUtils.equals(resultCode, "00")) {
-				System.out.println(String.format("(%s, %s) %s. Update Skip.", info.getNx(), info.getNy(), (String) resultMap.get("resultMsg")));
+				sb.append(String.format("(%s, %s) %s. Update Skip.", info.getNx(), info.getNy(), (String) resultMap.get("resultMsg"))).append("\n");
 				failedRows++;
 				continue;
 			}
@@ -126,15 +127,19 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 				break;
 			case DB_FAILED:
 			default:
-				System.out.println(String.format("(%s, %s) DB update Failed.", info.getNx(), info.getNy()));
+				sb.append(String.format("(%s, %s) DB update Failed.", info.getNx(), info.getNy())).append("\n");
 			}
 		}
 		
-		System.out.println(String.format("AllRows: %d, updatedRows: %d, insertedRows: %d, failedRows: %d", DataBean.getLocationInfoList_schedule().size(), updatedRows, insertedRows, failedRows));
+		sb.append(String.format("AllRows: %d, updatedRows: %d, insertedRows: %d, failedRows: %d",
+				DataBean.getLocationInfoList_schedule().size(), updatedRows, insertedRows, failedRows)).append("\n");
 		
 		Date afterD = new Date();
-		nowTime = timeFormat.format(afterD);
-		System.out.println(String.format("[%s][Scheduler] %s End", nowTime, jobDetail));
+		String afterTime = timeFormat.format(afterD);
+		sb.append(String.format("[%s][Scheduler] %s End", afterTime, jobDetail)).append("\n");
+		
+		long runTime = (afterD.getTime() - d.getTime())/1000;
+		sb.append(String.format("runTime: %dm %ds", runTime/60, runTime%60));
 	}
 	
 	
@@ -197,9 +202,9 @@ public class JobUltraSrtNcst extends QuartzJobBean {
  			
  			return sb.toString();
 		} catch (MalformedURLException e) {
-			System.out.println(e.fillInStackTrace());
+			sb.append(e.fillInStackTrace()).append("\n");
 		} catch (IOException e) {
-			System.out.println(e.fillInStackTrace());
+			sb.append(e.fillInStackTrace()).append("\n");
 		}
 		
 		return null;
@@ -243,9 +248,6 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 				dtoMap.put((String) item.get("category"), Float.parseFloat((String) item.get("obsrValue")));
 			}
 			
-			// TODO: Unrecognized Field "PTY" 오류로 해당 코드 사용 안됨. 확인 필요.
-//			UltraSrtNcst dto = mapper.convertValue(dtoMap, UltraSrtNcst.class);
-			
 			UltraSrtNcst dto = new UltraSrtNcst();
 			dto.setBaseDate((String) dtoMap.get("baseDate"));
 			dto.setBaseTime((String) dtoMap.get("baseTime"));
@@ -264,10 +266,10 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 			resultMap.put("dto", dto);
 			return resultMap;
 		} catch(IOException e) {
-			System.out.println(e.fillInStackTrace());
+			sb.append(e.fillInStackTrace()).append("\n");
 			resultMap = new HashMap<>();
 		} catch(Exception e) {
-			System.out.println(e.fillInStackTrace());
+			sb.append(e.fillInStackTrace()).append("\n");
 			resultMap = new HashMap<>();
 		}
 		
@@ -337,7 +339,7 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 				return DB_INSERTED;
 			}
 		} catch (SQLException e){
-			System.out.println(e.fillInStackTrace());
+			sb.append(e.fillInStackTrace()).append("\n");
 		} finally {
 			// try 구문에서 중간에 return할 경우 리턴된 후 finally 코드가 실행된다.
 			DBConnect.close(psmt);	

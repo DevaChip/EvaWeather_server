@@ -18,8 +18,9 @@ public class WeatherAPIController {
 
 	@GetMapping(value = "nowWeather")
 	public String getVilageFcstInfo(@RequestParam(required=true) String areaCode,
+									@RequestParam(required=false) String date,
 									@RequestParam(required=false) String time) {
-		String nowWeatherJson = service.getNowWeather(areaCode, time); 
+		String nowWeatherJson = service.getNowWeather(areaCode, date, time); 
 		
 		return nowWeatherJson;
 	}

@@ -11,10 +11,12 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -39,25 +41,28 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 	private final int DB_INSERTED = 1;
 	private final int DB_UPDATED = 2;
 	
-	private final int CONNECT_TIMEOUT = 5000;
-	private final int READ_TIMEOUT = 5000;
+	private final int CONNECT_TIMEOUT = 10000;
+	private final int READ_TIMEOUT = 10000;
 	
+	private StringBuffer sb = new StringBuffer();
 	
 	@Override
 	protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
-		String jobName = context.getJobDetail().getJobDataMap().getString("jobName");
+		String jobName = context.getJobDetail().getKey().getName();
 		String jobDetail = context.getJobDetail().getKey().getName();
 		
 		System.out.println(String.format("===================== [%s] START =====================", jobName));
 		if (DBConnect.getConnection() != null) {
 			getUltraSrtFcsts(jobDetail);
 		} else {
-			System.out.println("DB Connect Failed. Job Stop.");
+			sb.append("DB Connect Failed. Job Stop.\n");
 		}
+		System.out.println(sb.toString());
 		System.out.println(String.format("===================== [%s] END =====================", jobName));
 	}
 	
 	// 초단기실황 업데이트 | 추가
+	@SuppressWarnings("unchecked")
 	public void getUltraSrtFcsts(String jobDetail) {
 		// 현재 시간
 		DateFormat dFormat = new SimpleDateFormat("yyyyMMdd");
@@ -70,7 +75,8 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 		
 		DateFormat timeFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		String nowTime = timeFormat.format(d);
-		System.out.println(String.format("[%s][Scheduler] %s Start", nowTime, jobDetail));
+		
+		sb.append(String.format("[%s][Scheduler] %s Start\n", nowTime, jobDetail));
 		
 		int updatedRows = 0;
 		int insertedRows = 0;
@@ -93,7 +99,7 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 			String getResult = getVilageFcstData(apiName, request);
 			
 			if (getResult==null) {	// API 통신에 실패한 경우
-				System.out.println(String.format("(%s, %s) Failed to receive response from server. Update Skip.", info.getNx(), info.getNy()));
+				sb.append(String.format("(%s, %s) Failed to receive response from server. Update Skip.\n", info.getNx(), info.getNy()));
 				failedRows++;
 				continue;
 			}
@@ -104,37 +110,42 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 			// 에러 코드 분류
 			String resultCode = (String) resultMap.get("resultCode");
 			if (StringUtils.equals(resultCode, "03")) {
-				System.out.println("No data has been generated for the current time. Job Stop.");
+				sb.append("No data has been generated for the current time. Job Stop.\n");
 				break;
 			} else if (!StringUtils.equals(resultCode, "00")) {
-				System.out.println(String.format("(%s, %s) %s. Update Skip.", info.getNx(), info.getNy(), (String) resultMap.get("resultMsg")));
+				sb.append(String.format("(%s, %s) %s. Update Skip.\n", info.getNx(), info.getNy(), (String) resultMap.get("resultMsg")));
 				failedRows++;
 				continue;
 			}
 				
 			// 데이터 업데이트 | 삽입
-			UltraSrtFcst dto = (UltraSrtFcst)resultMap.get("dto");
-			int dbResultCode = updateData(dto);
-			
-			switch(dbResultCode) {
-			case DB_UPDATED:
-				updatedRows++;
-				break;
-			case DB_INSERTED:
-				insertedRows++;
-				break;
-			case DB_FAILED:
-			default:
-				System.out.println(String.format("(%s, %s) DB update Failed.", info.getNx(), info.getNy()));
+			List<UltraSrtFcst> dtoList = (List<UltraSrtFcst>) resultMap.getOrDefault("dtoList", new ArrayList<UltraSrtFcst>());
+			for (UltraSrtFcst dto : dtoList) {
+				int dbResultCode = updateData(dto);
+				
+				switch(dbResultCode) {
+				case DB_UPDATED:
+					updatedRows++;
+					break;
+				case DB_INSERTED:
+					insertedRows++;
+					break;
+				case DB_FAILED:
+				default:
+					sb.append(String.format("(%d, %d) %s-%s DB update Failed.\n", dto.getNx(), dto.getNy(), dto.getFcstDate(), dto.getFcstTime()));
+				}
 			}
 		}
 		
-		System.out.println(String.format("AllRows: %d, updatedRows: %d, insertedRows: %d, failedRows: %d",
+		sb.append(String.format("AllRows: %d, updatedRows: %d, insertedRows: %d, failedRows: %d\n",
 				DataBean.getLocationInfoList_schedule().size(), updatedRows, insertedRows, failedRows));
 		
 		Date afterD = new Date();
-		nowTime = timeFormat.format(afterD);
-		System.out.println(String.format("[%s][Scheduler] %s End", nowTime, jobDetail));
+		String afterTime = timeFormat.format(afterD);
+		sb.append(String.format("[%s][Scheduler] %s End\n", afterTime, jobDetail));
+		
+		long runTime = (afterD.getTime() - d.getTime())/1000;
+		sb.append(String.format("runTime: %dm %ds", runTime/60, runTime%60));
 	}
 	
 	
@@ -197,9 +208,9 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
  			
  			return sb.toString();
 		} catch (MalformedURLException e) {
-			System.out.println(e.fillInStackTrace());
+			sb.append(e.fillInStackTrace() + "\n");
 		} catch (IOException e) {
-			System.out.println(e.fillInStackTrace());
+			sb.append(e.fillInStackTrace() + "\n");
 		}
 		
 		return null;
@@ -234,43 +245,53 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 			map = (Map<String, Object>)map.get("items");
 			List<Map<String, Object>> items = (List<Map<String, Object>>)map.get("item");
 			
-			Map<String, Object> dtoMap = new HashMap<>();
+			Map<Fcst_Key, Map<String, Object>> dtoMap = new HashMap<>();
 			for (Map<String, Object> item: items) {
-				dtoMap.put("fcstDate", item.get("fcstDate"));
-				dtoMap.put("fcstTime", item.get("fcstTime"));
-				dtoMap.put("nx", item.get("nx"));
-				dtoMap.put("ny", item.get("ny"));
+				Fcst_Key key = new Fcst_Key((String) item.get("fcstDate"),
+						(String) item.get("fcstTime"), (int) item.get("nx"), (int) item.get("ny"));
 				
-				dtoMap.put((String) item.get("category"), Float.parseFloat((String) item.get("fcstValue")));
+				if (dtoMap.get(key)==null) {
+					dtoMap.put(key, new HashMap<String, Object>());
+				}
+				
+				Map<String, Object> category = dtoMap.get(key);
+				category.put((String) item.get("category"), Float.parseFloat((String) item.get("fcstValue")));
+				
+				dtoMap.put(key, category);
 			}
 			
-			// TODO: Unrecognized Field "PTY" 오류로 해당 코드 사용 안됨. 확인 필요.
-//			UltraSrtFcst dto = mapper.convertValue(dtoMap, UltraSrtFcst.class);
+			Set<Fcst_Key> keys = dtoMap.keySet();
+			List<UltraSrtFcst> dtoList = new ArrayList<>();
+			for (Fcst_Key key: keys) {
+				Map<String, Object> category = dtoMap.get(key);
+				
+				UltraSrtFcst dto = new UltraSrtFcst();
+				dto.setFcstDate(key.getFcstDate());
+				dto.setFcstTime(key.getFcstTime());
+				dto.setNx(key.getNx());
+				dto.setNy(key.getNy());
+				
+				dto.setT1H((float) category.get("T1H"));
+				dto.setRN1((float) category.get("RN1"));
+				dto.setSKY((float) category.get("SKY"));
+				dto.setUUU((float) category.get("UUU"));
+				dto.setVVV((float) category.get("VVV"));
+				dto.setREH((float) category.get("REH"));
+				dto.setPTY((float) category.get("PTY"));
+				dto.setLGT((float) category.get("LGT"));
+				dto.setVEC((float) category.get("VEC"));
+				dto.setWSD((float) category.get("WSD"));
+				
+				dtoList.add(dto);
+			}
 			
-			UltraSrtFcst dto = new UltraSrtFcst();
-			dto.setFcstDate((String) dtoMap.get("fcstDate"));
-			dto.setFcstTime((String) dtoMap.get("fcstTime"));
-			dto.setNx((int) dtoMap.get("nx"));
-			dto.setNy((int) dtoMap.get("ny"));
-			
-			dto.setT1H((float) dtoMap.get("T1H"));
-			dto.setRN1((float) dtoMap.get("RN1"));
-			dto.setSKY((float) dtoMap.get("SKY"));
-			dto.setUUU((float) dtoMap.get("UUU"));
-			dto.setVVV((float) dtoMap.get("VVV"));
-			dto.setREH((float) dtoMap.get("REH"));
-			dto.setPTY((float) dtoMap.get("PTY"));
-			dto.setLGT((float) dtoMap.get("LGT"));
-			dto.setVEC((float) dtoMap.get("VEC"));
-			dto.setWSD((float) dtoMap.get("WSD"));
-			
-			resultMap.put("dto", dto);
+			resultMap.put("dtoList", dtoList);
 			return resultMap;
 		} catch(IOException e) {
-			System.out.println(e.fillInStackTrace());
+			sb.append(e.fillInStackTrace() + "\n");
 			resultMap = new HashMap<>();
 		} catch(Exception e) {
-			System.out.println(e.fillInStackTrace());
+			sb.append(e.fillInStackTrace() + "\n");
 			resultMap = new HashMap<>();
 		}
 		
@@ -344,7 +365,7 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 				return DB_INSERTED;
 			}
 		} catch (SQLException e){
-			System.out.println(e.fillInStackTrace());
+			sb.append(e.fillInStackTrace() + "\n");
 		} finally {
 			// try 구문에서 중간에 return할 경우 리턴된 후 finally 코드가 실행된다.
 			DBConnect.close(psmt);	

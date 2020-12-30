@@ -42,30 +42,35 @@
 		
 		<property name="triggers">
 			<list>
+				<!-- 40분부터 10분마다 -->
 				<bean id="trigger_ultraSrtNcst"
 					class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
 					<property name="name" value="schedule_ultraSrtNcst" />
 					<property name="jobDetail" ref="job_ultraSrtNcst" />
 					<property name="description" value="초단기실황 정보 업데이트" />
-					<property name="cronExpression" value="0 57/10 * * * ?"></property>	<!-- 30분부터 10분마다 -->
+					<property name="cronExpression" value="0 40/10 * * * ?"></property>
 					<property name="misfireInstruction"
 						value="2"></property>
 				</bean>
+				
+				<!-- 매 시각 45분 -->
 				<bean id="trigger_ultraSrtFcst"
 					class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
 					<property name="name" value="schedule_ultraSrtFcst" />
 					<property name="jobDetail" ref="job_ultraSrtFcst" />
 					<property name="description" value="초단기예보 정보 업데이트" />
-					<property name="cronExpression" value="0 34 0/1 * * ?"></property>	<!-- 매 시각 30분 -->
+					<property name="cronExpression" value="0 45 * * * ?"></property>
 					<property name="misfireInstruction"
 						value="2"></property>
 				</bean>
+				
+				<!-- 2시 10분부터 3시간마다 -->
 				<bean id="trigger_vilageFcst"
 					class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
 					<property name="name" value="schedule_vilageFcst" />
 					<property name="jobDetail" ref="job_vilageFcst" />
 					<property name="description" value="동네예보 정보 업데이트" />
-					<property name="cronExpression" value="0 10 2/3 * * ?"></property>	<!-- 2시 10분부터 3시간마다 -->
+					<property name="cronExpression" value="0 10 2/3 * * ?"></property>	
 					<property name="misfireInstruction"
 						value="2"></property>
 				</bean>
