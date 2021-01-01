@@ -16,7 +16,7 @@ public class WeatherAPIController {
 		this.service = service;
 	}
 
-	@GetMapping(value = "nowWeather")
+	@GetMapping(value = "nowWeather", produces="application/json;charset=UTF-8")
 	public String getVilageFcstInfo(@RequestParam(required=true) String areaCode,
 									@RequestParam(required=false) String date,
 									@RequestParam(required=false) String time) {
