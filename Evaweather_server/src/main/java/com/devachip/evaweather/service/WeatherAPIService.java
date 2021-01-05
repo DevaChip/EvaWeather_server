@@ -18,8 +18,8 @@ import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.stereotype.Service;
 
+import com.devachip.evaweather.bean.DBConnect;
 import com.devachip.evaweather.bean.DataBean;
-import com.devachip.evaweather.dbconnect.DBConnect;
 import com.devachip.evaweather.model.NowWeather;
 import com.devachip.evaweather.model.NowWeather_AirCondition;
 import com.devachip.evaweather.model.NowWeather_Detail;
@@ -27,12 +27,15 @@ import com.devachip.evaweather.model.NowWeather_Time;
 import com.devachip.evaweather.model.VilageFcstRequest;
 import com.devachip.evaweather.vo.LocationInfo;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * 날씨 API 받아오기
  * 
  * @author idean
  * @since 2020.11.26
  */
+@Slf4j
 @Service
 public class WeatherAPIService {
 	private final int YESTERDAY = 0;
@@ -93,11 +96,11 @@ public class WeatherAPIService {
 			
 			return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(dto);
 		} catch (JsonGenerationException e) {
-			System.out.println(e.fillInStackTrace());
+			log.error(e.fillInStackTrace() + "");
 		} catch (JsonMappingException e) {
-			System.out.println(e.fillInStackTrace());
+			log.error(e.fillInStackTrace() + "");
 		} catch (IOException e) {
-			System.out.println(e.fillInStackTrace());
+			log.error(e.fillInStackTrace() + "");
 		} 
 		
 		return "{\"error\" : \"data parsing Error.\"}";
@@ -229,7 +232,7 @@ public class WeatherAPIService {
 			
 			return true;
 		} catch (SQLException e) {
-			
+			log.error(e.fillInStackTrace() + "");
 		} finally {
 			DBConnect.close(rs);
 			DBConnect.close(psmt);
@@ -319,7 +322,7 @@ public class WeatherAPIService {
 			
 			return true;
 		} catch (SQLException e) {
-			System.out.println(e.fillInStackTrace());
+			log.error(e.fillInStackTrace() + "");
 		} finally {
 			DBConnect.close(rs);
 			DBConnect.close(psmt);
@@ -352,7 +355,7 @@ public class WeatherAPIService {
 			
 			return true;
 		} catch(Exception e) {
-			System.out.println(e.fillInStackTrace());
+			log.error(e.fillInStackTrace() + "");
 		}
 		
 		return false;

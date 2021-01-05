@@ -23,15 +23,18 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 
+import com.devachip.evaweather.bean.DBConnect;
 import com.devachip.evaweather.bean.DataBean;
-import com.devachip.evaweather.dbconnect.DBConnect;
 import com.devachip.evaweather.model.UltraSrtNcst;
 import com.devachip.evaweather.model.VilageFcstRequest;
 import com.devachip.evaweather.vo.LocationInfo;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * 초단기실황 데이터 수집 스케쥴러
  */
+@Slf4j
 public class JobUltraSrtNcst extends QuartzJobBean {
 	private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI9cAWdjV3xScZ6Sj9QFn4WL7pe8YldzB%2BZjrD1fVBrbNTS2pMDj6siAw%3D%3D";
 	
@@ -49,14 +52,14 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 		String jobName = context.getJobDetail().getKey().getName();
 		String jobDetail = context.getJobDetail().getKey().getName();
 		
-		System.out.println(String.format("===================== [%s] START =====================", jobName));
+		log.debug("===================== [{}] START =====================", jobName);
 		if (DBConnect.getConnection() != null) {
 			getUltraSrtNcsts(jobDetail);
 		} else {
 			sb.append("DB Connect Failed. Job Stop.\n");
 		}
-		System.out.println(sb.toString());
-		System.out.println(String.format("===================== [%s] END =====================", jobName));
+		log.debug(sb.toString());
+		log.debug("===================== [{}] END =====================", jobName);
 	}
 	
 	// 초단기실황 업데이트 | 추가

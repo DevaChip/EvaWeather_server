@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 
 import com.devachip.evaweather.vo.LocationInfo;
 
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * API 조회에 필요한 데이터를 담고 있는 클래스
@@ -30,6 +31,7 @@ import com.devachip.evaweather.vo.LocationInfo;
  * @author idean
  * @since 2020.12.10
  */
+@Slf4j
 @Component
 public class DataBean {
 	private static Map<String, LocationInfo> locationInfoMap;	// 지역 정보
@@ -86,7 +88,7 @@ public class DataBean {
 		
 		XSSFWorkbook wb = null;
 		
-		System.out.println("==================== load LocationInfo Start ====================");
+		log.debug("==================== load LocationInfo Start ====================");
 		try {
 			String fileName = "LocationInfo.xlsx";
 			ClassPathResource resource = new ClassPathResource(fileName);
@@ -103,11 +105,11 @@ public class DataBean {
 			String[] cells = new String[colNamesRow.getLastCellNum()];	// row 당 셀 최대 갯수(컬럼명 row는 빈 값이 없기 때문에 최대 갯수가 된다.)
 			
 			sheet.removeRow(colNamesRow);
-			System.out.println("Sheet rows: " + sheet.getLastRowNum());
+			log.debug("Sheet rows: " + sheet.getLastRowNum());
 			
 			for (Row row : sheet) {
 				if (row==null) {
-					System.out.println("row Data is Null.");
+					log.debug("row Data is Null.");
 					continue;
 				}
 				
@@ -153,7 +155,7 @@ public class DataBean {
 				locationInfoMap.put(cells[AREA_CODE], krAreaCode);
 				scheduleArr[nx][ny] = krAreaCode;
 			}
-			System.out.println("insertedRows: " + locationInfoMap.size());
+			log.debug("inserted Rows: " + locationInfoMap.size());
 			
 			for (int nx=0; nx < NX_MAX; nx++) {
 				for (int ny=0; ny < NY_MAX; ny++) {
@@ -164,9 +166,9 @@ public class DataBean {
 					locationInfoList_schedule.add(scheduleArr[nx][ny]);
 				}
 			}
-			System.out.println("inserted Schedule Rows: " + locationInfoList_schedule.size());
+			log.debug("inserted Schedule Rows: " + locationInfoList_schedule.size());
 		} catch(Exception e) {
-			e.printStackTrace();
+			log.error(e.fillInStackTrace() + "");
 		} finally {
 			if (wb!=null) {
 				// AutoCloseable 때문에 닫을 필요 없이 자원이 회수된다.
@@ -175,6 +177,6 @@ public class DataBean {
 			}
 		}
 		
-		System.out.println("==================== load LocationInfo End ====================");
+		log.debug("==================== load LocationInfo End ====================");
 	}
 }

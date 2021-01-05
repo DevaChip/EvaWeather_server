@@ -1,4 +1,4 @@
-package com.devachip.evaweather.dbconnect;
+package com.devachip.evaweather.bean;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,6 +15,9 @@ import org.apache.poi.util.IOUtils;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Component
 public class DBConnect {
 	private static Connection conn;
@@ -71,13 +74,10 @@ public class DBConnect {
 			Class.forName(args[CLASS_NAME]);
 			conn = DriverManager.getConnection(args[URL], args[USER_NAME], args[PASSWORD]);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
 			IOUtils.closeQuietly(rd);
@@ -104,7 +104,7 @@ public class DBConnect {
 			}
 			
 		} catch (SQLException e) {
-			System.out.println(e.fillInStackTrace());
+			log.error(e.fillInStackTrace() + "");
 		}
 		
 		return false;
