@@ -24,13 +24,13 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 
 import com.devachip.evaweather.bean.DBConnect;
 import com.devachip.evaweather.bean.DataBean;
 import com.devachip.evaweather.model.UltraSrtFcst;
 import com.devachip.evaweather.model.VilageFcstRequest;
+import com.devachip.evaweather.util.BeanUtils;
 import com.devachip.evaweather.vo.LocationInfo;
 
 import lombok.extern.slf4j.Slf4j;
@@ -52,13 +52,10 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 	private StringBuffer sb = new StringBuffer();
 	private DBConnect dbConnect;
 	
-	@Autowired
-	public JobUltraSrtFcst(DBConnect dbConnect) {
-		this.dbConnect = dbConnect;
-	}
-	
 	@Override
 	protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
+		dbConnect = (DBConnect) BeanUtils.getBean("DBConnect");
+		
 		String jobName = context.getJobDetail().getKey().getName();
 		String jobDetail = context.getJobDetail().getKey().getName();
 		
@@ -86,7 +83,6 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 		
 		DateFormat timeFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		String nowTime = timeFormat.format(d);
-		
 		sb.append(String.format("[%s][Scheduler] %s Start\n", nowTime, jobDetail));
 		
 		int updatedRows = 0;

@@ -28,6 +28,7 @@ import com.devachip.evaweather.bean.DBConnect;
 import com.devachip.evaweather.bean.DataBean;
 import com.devachip.evaweather.model.UltraSrtNcst;
 import com.devachip.evaweather.model.VilageFcstRequest;
+import com.devachip.evaweather.util.BeanUtils;
 import com.devachip.evaweather.vo.LocationInfo;
 
 import lombok.extern.slf4j.Slf4j;
@@ -49,12 +50,10 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 	private StringBuffer sb = new StringBuffer();
 	private DBConnect dbConnect;
 	
-	public JobUltraSrtNcst(DBConnect dbConnect) {
-		this.dbConnect = dbConnect;
-	}
-	
 	@Override
 	protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
+		dbConnect = (DBConnect) BeanUtils.getBean("DBConnect");
+		
 		String jobName = context.getJobDetail().getKey().getName();
 		String jobDetail = context.getJobDetail().getKey().getName();
 		
