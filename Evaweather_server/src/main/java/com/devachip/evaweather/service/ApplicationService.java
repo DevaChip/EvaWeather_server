@@ -12,12 +12,17 @@ import com.devachip.evaweather.bean.DBConnect;
 
 @Service
 public class ApplicationService implements ApplicationListener<ContextClosedEvent> {
-
+	private DBConnect dbConnect;
+	
+	public ApplicationService(DBConnect dbConnect) {
+		this.dbConnect = dbConnect;
+	}
+	
 	@Override
 	public void onApplicationEvent(ContextClosedEvent event) {	// 서버 종료 시 실행됨.
-		 shutdownScheduler();
+		 shutdownScheduler();	// 스케쥴러 종료
 		
-		 DBConnect.close(DBConnect.getConnection());
+		 DBConnect.close(dbConnect.getConnection());	// DB 연결 종료
 	}
 	
 	private void shutdownScheduler() {

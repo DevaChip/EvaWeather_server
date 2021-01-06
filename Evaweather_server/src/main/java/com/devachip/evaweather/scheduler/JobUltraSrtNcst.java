@@ -7,6 +7,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.text.DateFormat;
@@ -46,6 +47,11 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 	private final int READ_TIMEOUT = 10000;
 	
 	private StringBuffer sb = new StringBuffer();
+	private DBConnect dbConnect;
+	
+	public JobUltraSrtNcst(DBConnect dbConnect) {
+		this.dbConnect = dbConnect;
+	}
 	
 	@Override
 	protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
@@ -53,7 +59,7 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 		String jobDetail = context.getJobDetail().getKey().getName();
 		
 		log.debug("===================== [{}] START =====================", jobName);
-		if (DBConnect.getConnection() != null) {
+		if (dbConnect.getConnection() != null) {
 			getUltraSrtNcsts(jobDetail);
 		} else {
 			sb.append("DB Connect Failed. Job Stop.\n");
@@ -291,6 +297,7 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 			return DB_FAILED;
 		}
 		
+		Connection conn = dbConnect.getConnection();
 		String updateSQL = "UPDATE UltraSrtNcsts SET T1H=?, RN1=?, UUU=?, VVV=?, REH=?, PTY=?, VEC=?, WSD=? "
 				+ "WHERE baseDate=? AND baseTime=? AND nx=? AND ny=?";
 		
@@ -301,7 +308,7 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 		int updatedRow = 0;
 		try {
 			// 업데이트
-			psmt = DBConnect.getConnection().prepareStatement(updateSQL);
+			psmt = conn.prepareStatement(updateSQL);
 			psmt.setFloat(1, dto.getT1H());
 			psmt.setFloat(2, dto.getRN1());
 			psmt.setFloat(3, dto.getUUU());
@@ -322,7 +329,7 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 			}				
 			
 			// 수정할 데이터가 없을 경우 추가
-			psmt = DBConnect.getConnection().prepareStatement(insertSQL);
+			psmt = conn.prepareStatement(insertSQL);
 			psmt.setString(1, dto.getBaseDate());
 			psmt.setString(2, dto.getBaseTime());
 			psmt.setInt(3, dto.getNx());

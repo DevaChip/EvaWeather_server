@@ -7,6 +7,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -50,6 +51,11 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 	private final int READ_TIMEOUT = 10000;
 	
 	private StringBuffer sb = new StringBuffer();
+	private DBConnect dbConnect;
+	
+	public JobVilageFcst(DBConnect dbConnect) {
+		this.dbConnect = dbConnect;
+	}
 	
 	@Override
 	protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
@@ -57,7 +63,7 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 		String jobDetail = context.getJobDetail().getKey().getName();
 		
 		log.debug("===================== [{}] START =====================", jobName);
-		if (DBConnect.getConnection() != null) {
+		if (dbConnect.getConnection() != null) {
 			getVilageFcst(jobDetail);
 		} else {
 			sb.append("DB Connect Failed. Job Stop.").append("\n");
@@ -318,6 +324,7 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 			return DB_FAILED;
 		}
 		
+		Connection conn = dbConnect.getConnection();
 		String updateSQL = "UPDATE VilageFcsts SET POP=?, PTY=?, R06=?, REH=?, S06=?, SKY=?, T3H=?, TMN=?, TMX=?, UUU=?, VVV=?, WAV=?, VEC=?, WSD=? "
 				+ "WHERE fcstDate=? AND fcstTime=? AND nx=? AND ny=?";
 		
@@ -328,7 +335,7 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 		int updatedRow = 0;
 		try {
 			// 업데이트
-			psmt = DBConnect.getConnection().prepareStatement(updateSQL);
+			psmt = conn.prepareStatement(updateSQL);
 			psmt.setFloat(1, dto.getPOP());
 			psmt.setFloat(2, dto.getPTY());
 			setFloat(psmt, 3, dto.getR06());
@@ -355,7 +362,7 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 			}				
 			
 			// 수정할 데이터가 없을 경우 추가
-			psmt = DBConnect.getConnection().prepareStatement(insertSQL);
+			psmt = conn.prepareStatement(insertSQL);
 			psmt.setString(1, dto.getFcstDate());
 			psmt.setString(2, dto.getFcstTime());
 			psmt.setInt(3, dto.getNx());

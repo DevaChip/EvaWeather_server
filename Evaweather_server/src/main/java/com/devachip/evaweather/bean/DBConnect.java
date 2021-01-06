@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 public class DBConnect {
-	private static Connection conn;
+	private Connection conn;
 	
 	private final int CLASS_NAME = 0;
 	private final int USER_NAME = 1;
@@ -31,7 +31,7 @@ public class DBConnect {
 		dbConnect();
 	}
 	
-	public static Connection getConnection() {
+	public Connection getConnection() {
 		return conn;
 	}
 

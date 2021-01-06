@@ -7,6 +7,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.text.DateFormat;
@@ -23,6 +24,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 
 import com.devachip.evaweather.bean.DBConnect;
@@ -48,6 +50,12 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 	private final int READ_TIMEOUT = 10000;
 	
 	private StringBuffer sb = new StringBuffer();
+	private DBConnect dbConnect;
+	
+	@Autowired
+	public JobUltraSrtFcst(DBConnect dbConnect) {
+		this.dbConnect = dbConnect;
+	}
 	
 	@Override
 	protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
@@ -55,7 +63,7 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 		String jobDetail = context.getJobDetail().getKey().getName();
 		
 		log.debug("===================== [{}] START =====================", jobName);
-		if (DBConnect.getConnection() != null) {
+		if (dbConnect.getConnection() != null) {
 			getUltraSrtFcsts(jobDetail);
 		} else {
 			sb.append("DB Connect Failed. Job Stop.\n");
@@ -313,6 +321,7 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 			return DB_FAILED;
 		}
 		
+		Connection conn = dbConnect.getConnection();
 		String updateSQL = "UPDATE UltraSrtFcsts SET T1H=?, RN1=?, SKY=?, UUU=?, VVV=?, REH=?, PTY=?, LGT=?, VEC=?, WSD=? "
 				+ "WHERE fcstDate=? AND fcstTime=? AND nx=? AND ny=?";
 		
@@ -323,7 +332,7 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 		int updatedRow = 0;
 		try {
 			// 업데이트
-			psmt = DBConnect.getConnection().prepareStatement(updateSQL);
+			psmt = conn.prepareStatement(updateSQL);
 			psmt.setFloat(1, dto.getT1H());
 			psmt.setFloat(2, dto.getRN1());
 			psmt.setFloat(3, dto.getSKY());
@@ -346,7 +355,7 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 			}				
 			
 			// 수정할 데이터가 없을 경우 추가
-			psmt = DBConnect.getConnection().prepareStatement(insertSQL);
+			psmt = conn.prepareStatement(insertSQL);
 			psmt.setString(1, dto.getFcstDate());
 			psmt.setString(2, dto.getFcstTime());
 			psmt.setInt(3, dto.getNx());

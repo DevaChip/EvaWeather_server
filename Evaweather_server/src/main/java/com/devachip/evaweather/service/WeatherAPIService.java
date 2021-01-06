@@ -1,6 +1,7 @@
 package com.devachip.evaweather.service;
 
 import java.io.IOException;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -41,6 +42,12 @@ public class WeatherAPIService {
 	private final int YESTERDAY = 0;
 	private final int TODAY = 1;
 	private final int TOMORROW = 2;
+	
+	private DBConnect dbConnect;
+	
+	public WeatherAPIService(DBConnect dbConnect) {
+		this.dbConnect = dbConnect;
+	}
 	
 	public String getNowWeather(String areaCode, String date, String time) {
 		// 현재 시간
@@ -117,6 +124,8 @@ public class WeatherAPIService {
 	 * @since 2020.12.30
 	 */
 	private boolean setData(NowWeather dto, VilageFcstRequest request) {
+		Connection conn = dbConnect.getConnection();
+		
 		String selectSQL = 
 				"SELECT "
 				+ "IFNULL(usn.T1H, usf.T1H) AS currentTemperature, IFNULL(usn.PTY, usf.PTY) AS pty, IFNULL(usn.RN1, usf.RN1) AS rn1, "
@@ -147,7 +156,7 @@ public class WeatherAPIService {
 		ResultSet rs = null;
 		
 		try {
-			psmt = DBConnect.getConnection().prepareStatement(selectSQL);
+			psmt = conn.prepareStatement(selectSQL);
 			
 			/**
 			 * 강수확률 기준 시간
@@ -254,6 +263,8 @@ public class WeatherAPIService {
 	 * @since 2020.12.30
 	 */
 	private boolean setTime(NowWeather dto, VilageFcstRequest request) {
+		Connection conn = dbConnect.getConnection();
+		
 		String selectTimeSQL = "SELECT fcstDate, fcstTime, T3H "
 				+ "FROM VilageFcsts "
 				+ "WHERE fcstDate "
@@ -266,7 +277,7 @@ public class WeatherAPIService {
 		
 		try {
 			// 시간 조회
-			psmt = DBConnect.getConnection().prepareStatement(selectTimeSQL);
+			psmt = conn.prepareStatement(selectTimeSQL);
 			psmt.setString(1, request.getBaseDate());
 			psmt.setString(2, request.getBaseDate());
 			psmt.setInt(3, Integer.parseInt(request.getNx()));
