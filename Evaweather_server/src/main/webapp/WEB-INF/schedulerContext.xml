@@ -3,7 +3,6 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 
-
 	<!-- 초단기실황 조회 작업 -->
 	<bean id="job_ultraSrtNcst"
 		class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
@@ -49,8 +48,7 @@
 					<property name="jobDetail" ref="job_ultraSrtNcst" />
 					<property name="description" value="초단기실황 정보 업데이트" />
 					<property name="cronExpression" value="0 40/10 * * * ?"></property>
-					<property name="misfireInstruction"
-						value="2"></property>
+					<property name="misfireInstruction" value="2"></property>
 				</bean>
 				
 				<!-- 매 시각 45분 -->
@@ -60,8 +58,7 @@
 					<property name="jobDetail" ref="job_ultraSrtFcst" />
 					<property name="description" value="초단기예보 정보 업데이트" />
 					<property name="cronExpression" value="0 45 * * * ?"></property>
-					<property name="misfireInstruction"
-						value="2"></property>
+					<property name="misfireInstruction"	value="2"></property>
 				</bean>
 				
 				<!-- 2시 10분부터 3시간마다 -->
@@ -71,8 +68,7 @@
 					<property name="jobDetail" ref="job_vilageFcst" />
 					<property name="description" value="동네예보 정보 업데이트" />
 					<property name="cronExpression" value="0 10 2/3 * * ?"></property>	
-					<property name="misfireInstruction"
-						value="2"></property>
+					<property name="misfireInstruction" value="2"></property>
 				</bean>
 			</list>
 		</property>

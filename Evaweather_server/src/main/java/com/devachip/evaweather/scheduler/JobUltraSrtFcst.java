@@ -7,6 +7,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -20,8 +21,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.TypeReference;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.springframework.scheduling.quartz.QuartzJobBean;
@@ -32,6 +31,7 @@ import com.devachip.evaweather.model.UltraSrtFcst;
 import com.devachip.evaweather.model.VilageFcstRequest;
 import com.devachip.evaweather.util.BeanUtils;
 import com.devachip.evaweather.vo.LocationInfo;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -202,9 +202,9 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 			int resCode = conn.getResponseCode();
 			BufferedReader br;
 			if (HttpURLConnection.HTTP_OK <= resCode && resCode <= HttpURLConnection.HTTP_MULT_CHOICE) {
-				br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+				br = new BufferedReader(new InputStreamReader(conn.getInputStream(), Charset.forName("UTF-8")));
 			} else {
-				br = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
+				br = new BufferedReader(new InputStreamReader(conn.getErrorStream(), Charset.forName("UTF-8")));
 			}
 
 			sb.setLength(0); // 버퍼 초기화
@@ -235,7 +235,7 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 		ObjectMapper mapper = new ObjectMapper();
 		
 		try {
-			Map<String, Object> map = mapper.readValue(jsonString, new TypeReference<Map<String, Object>>() {});
+			Map<String, Object> map = mapper.reader().readValue(jsonString, Map.class);
 			
 			map = (Map<String, Object>)map.get("response");
 			

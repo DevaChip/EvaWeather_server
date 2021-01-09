@@ -14,9 +14,6 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.stereotype.Service;
 
 import com.devachip.evaweather.bean.DBConnect;
@@ -27,6 +24,7 @@ import com.devachip.evaweather.model.NowWeather_Detail;
 import com.devachip.evaweather.model.NowWeather_Time;
 import com.devachip.evaweather.model.VilageFcstRequest;
 import com.devachip.evaweather.vo.LocationInfo;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,6 +43,8 @@ public class WeatherAPIService {
 	
 	private DBConnect dbConnect;
 	
+	// TODO: Autowired 하지 않아도 의존성 주입이 된다.
+	// 컨트롤러에서 서비스 코드를 의존성 주입할 경우 하위 생성자에도 의존성 주입이 되는지 확인이 필요하다.
 	public WeatherAPIService(DBConnect dbConnect) {
 		this.dbConnect = dbConnect;
 	}
@@ -102,10 +102,6 @@ public class WeatherAPIService {
 			setSample(dto);
 			
 			return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(dto);
-		} catch (JsonGenerationException e) {
-			log.error(e.fillInStackTrace() + "");
-		} catch (JsonMappingException e) {
-			log.error(e.fillInStackTrace() + "");
 		} catch (IOException e) {
 			log.error(e.fillInStackTrace() + "");
 		} 

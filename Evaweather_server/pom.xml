@@ -62,12 +62,12 @@
 	</dependency>
 		
 	
-	<dependency>	<!-- ObjectMapper 기능 -->
-	    <groupId>org.codehaus.jackson</groupId>
-	    <artifactId>jackson-mapper-asl</artifactId>
-	    <version>1.9.13</version>
+	<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind -->
+	<dependency>	<!-- swagger2 관련 --> <!-- ObjectMapper 기능 -->
+	    <groupId>com.fasterxml.jackson.core</groupId>
+	    <artifactId>jackson-databind</artifactId>
+	    <version>2.12.0</version>
 	</dependency>
-	
 	
 	<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
 	<dependency>	<!-- 문자열 관련 -->
@@ -129,6 +129,27 @@
 	    <artifactId>commons-logging</artifactId>
 	    </exclusion>
 	  </exclusions>
+	</dependency>
+		
+	<!-- https://mvnrepository.com/artifact/io.springfox/springfox-swagger2 -->
+	<dependency>
+	    <groupId>io.springfox</groupId>
+	    <artifactId>springfox-swagger2</artifactId>
+	    <version>2.9.2</version>
+	</dependency>
+	
+	<!-- https://mvnrepository.com/artifact/io.springfox/springfox-swagger-ui -->
+	<dependency>
+	    <groupId>io.springfox</groupId>
+	    <artifactId>springfox-swagger-ui</artifactId>
+	    <version>2.9.2</version>
+	</dependency>
+	
+	<!-- https://mvnrepository.com/artifact/io.springfox/springfox-core -->
+	<dependency>	<!-- swagger2 UI 관련 -->
+	    <groupId>io.springfox</groupId>
+	    <artifactId>springfox-core</artifactId>
+	    <version>2.9.2</version>
 	</dependency>
   </dependencies>
 
