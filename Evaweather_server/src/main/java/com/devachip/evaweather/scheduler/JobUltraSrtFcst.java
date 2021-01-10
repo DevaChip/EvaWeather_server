@@ -8,9 +8,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -25,10 +22,11 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 
-import com.devachip.evaweather.bean.DBConnect;
 import com.devachip.evaweather.bean.DataBean;
-import com.devachip.evaweather.model.UltraSrtFcst;
-import com.devachip.evaweather.model.VilageFcstRequest;
+import com.devachip.evaweather.domain.UltraSrtFcst;
+import com.devachip.evaweather.dto.VilageFcstRequest;
+import com.devachip.evaweather.persistence.UltraSrtFcstDAO;
+import com.devachip.evaweather.persistence.UltraSrtFcstDAOImpl;
 import com.devachip.evaweather.util.BeanUtils;
 import com.devachip.evaweather.vo.LocationInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -50,22 +48,17 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 	private final int READ_TIMEOUT = 10000;
 	
 	private StringBuffer sb = new StringBuffer();
-	private DBConnect dbConnect;
+	private UltraSrtFcstDAO dao = (UltraSrtFcstDAO) BeanUtils.getBean(UltraSrtFcstDAOImpl.class);
 	
 	@Override
 	protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
-		dbConnect = (DBConnect) BeanUtils.getBean("DBConnect");
 		
 		String jobName = context.getJobDetail().getKey().getName();
 		String jobDetail = context.getJobDetail().getKey().getName();
 		
 		log.debug("===================== [{}] START =====================", jobName);
-		if (dbConnect.getConnection() != null) {
-			getUltraSrtFcsts(jobDetail);
-		} else {
-			sb.append("DB Connect Failed. Job Stop.\n");
-		}
-		log.debug(sb.toString());
+		getUltraSrtFcsts(jobDetail);
+		log.debug(sb.toString());	// 실행결과 한번에 출력
 		log.debug("===================== [{}] END =====================", jobName);
 	}
 	
@@ -126,9 +119,9 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 			}
 				
 			// 데이터 업데이트 | 삽입
-			List<UltraSrtFcst> dtoList = (List<UltraSrtFcst>) resultMap.getOrDefault("dtoList", new ArrayList<UltraSrtFcst>());
-			for (UltraSrtFcst dto : dtoList) {
-				int dbResultCode = updateData(dto);
+			List<UltraSrtFcst> entityList = (List<UltraSrtFcst>) resultMap.getOrDefault("entityList", new ArrayList<UltraSrtFcst>());
+			for (UltraSrtFcst entity : entityList) {
+				int dbResultCode = updateData(entity);
 				
 				switch(dbResultCode) {
 				case DB_UPDATED:
@@ -139,7 +132,7 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 					break;
 				case DB_FAILED:
 				default:
-					sb.append(String.format("(%d, %d) %s-%s DB update Failed.\n", dto.getNx(), dto.getNy(), dto.getFcstDate(), dto.getFcstTime()));
+					sb.append(String.format("(%d, %d) %s-%s DB update Failed.\n", entity.getNx(), entity.getNy(), entity.getFcstDate(), entity.getFcstTime()));
 				}
 			}
 		}
@@ -227,7 +220,7 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 	 * JSON -> List
 	 * API 로부터 받아온 데이터를 객체화
 	 * 
-	 * @return Map{resultCode: 결과코드, dto: 초단기실황 데이터 객체} 
+	 * @return Map{resultCode: 결과코드, entity: 초단기실황 데이터 객체} 
 	 */
 	@SuppressWarnings("unchecked")
 	public Map<String, Object> jsonToObject(String jsonString) {
@@ -268,31 +261,18 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 			}
 			
 			Set<Fcst_Key> keys = dtoMap.keySet();
-			List<UltraSrtFcst> dtoList = new ArrayList<>();
+			List<UltraSrtFcst> entityList = new ArrayList<>();
 			for (Fcst_Key key: keys) {
 				Map<String, Object> category = dtoMap.get(key);
 				
-				UltraSrtFcst dto = new UltraSrtFcst();
-				dto.setFcstDate(key.getFcstDate());
-				dto.setFcstTime(key.getFcstTime());
-				dto.setNx(key.getNx());
-				dto.setNy(key.getNy());
-				
-				dto.setT1H((float) category.get("T1H"));
-				dto.setRN1((float) category.get("RN1"));
-				dto.setSKY((float) category.get("SKY"));
-				dto.setUUU((float) category.get("UUU"));
-				dto.setVVV((float) category.get("VVV"));
-				dto.setREH((float) category.get("REH"));
-				dto.setPTY((float) category.get("PTY"));
-				dto.setLGT((float) category.get("LGT"));
-				dto.setVEC((float) category.get("VEC"));
-				dto.setWSD((float) category.get("WSD"));
-				
-				dtoList.add(dto);
+				UltraSrtFcst entity = new UltraSrtFcst(key.getFcstDate(), key.getFcstTime(), key.getNx(), key.getNy(),
+						(float) category.get("T1H"), (float) category.get("RN1"), (float) category.get("SKY"), (float) category.get("UUU"),
+						(float) category.get("VVV"), (float) category.get("REH"), (float) category.get("PTY"), (float) category.get("LGT"),
+						(float) category.get("VEC"), (float) category.get("WSD"));
+				entityList.add(entity);
 			}
 			
-			resultMap.put("dtoList", dtoList);
+			resultMap.put("entityList", entityList);
 			return resultMap;
 		} catch(IOException e) {
 			sb.append(e.fillInStackTrace() + "\n");
@@ -308,75 +288,20 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 	/**
 	 * API 데이터 갱신 | 삽입
 	 * 
-	 * @param dto
+	 * @param entity
 	 * @return DB 작업 코드값 {0:실패, 1:삽입, 2: 갱신}
 	 */
-	@SuppressWarnings("resource")
-	public synchronized int updateData(UltraSrtFcst dto) {
-		if (dto==null) {
+	public synchronized int updateData(UltraSrtFcst entity) {
+		if (entity == null) {
 			return DB_FAILED;
 		}
 		
-		Connection conn = dbConnect.getConnection();
-		String updateSQL = "UPDATE UltraSrtFcsts SET T1H=?, RN1=?, SKY=?, UUU=?, VVV=?, REH=?, PTY=?, LGT=?, VEC=?, WSD=? "
-				+ "WHERE fcstDate=? AND fcstTime=? AND nx=? AND ny=?";
+		if (dao.update(entity) == 1) {
+			return DB_UPDATED;
+		}
 		
-		String insertSQL = "INSERT INTO UltraSrtFcsts(fcstDate, fcstTime, nx, ny, T1H, RN1, SKY, UUU, VVV, REH, PTY, LGT, VEC, WSD) "
-				+ "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-		
-		PreparedStatement psmt = null;
-		int updatedRow = 0;
-		try {
-			// 업데이트
-			psmt = conn.prepareStatement(updateSQL);
-			psmt.setFloat(1, dto.getT1H());
-			psmt.setFloat(2, dto.getRN1());
-			psmt.setFloat(3, dto.getSKY());
-			psmt.setFloat(4, dto.getUUU());
-			psmt.setFloat(5, dto.getVVV());
-			psmt.setFloat(6, dto.getREH());
-			psmt.setFloat(7, dto.getPTY());
-			psmt.setFloat(8, dto.getLGT());
-			psmt.setFloat(9, dto.getVEC());
-			psmt.setFloat(10, dto.getWSD());
-			
-			psmt.setString(11, dto.getFcstDate());
-			psmt.setString(12, dto.getFcstTime());
-			psmt.setInt(13, dto.getNx());
-			psmt.setInt(14, dto.getNy());			
-			
-			updatedRow = psmt.executeUpdate();
-			if (updatedRow==1) {
-				return DB_UPDATED;
-			}				
-			
-			// 수정할 데이터가 없을 경우 추가
-			psmt = conn.prepareStatement(insertSQL);
-			psmt.setString(1, dto.getFcstDate());
-			psmt.setString(2, dto.getFcstTime());
-			psmt.setInt(3, dto.getNx());
-			psmt.setInt(4, dto.getNy());
-			
-			psmt.setFloat(5, dto.getT1H());
-			psmt.setFloat(6, dto.getRN1());
-			psmt.setFloat(7, dto.getSKY());
-			psmt.setFloat(8, dto.getUUU());
-			psmt.setFloat(9, dto.getVVV());
-			psmt.setFloat(10, dto.getREH());
-			psmt.setFloat(11, dto.getPTY());
-			psmt.setFloat(12, dto.getLGT());
-			psmt.setFloat(13, dto.getVEC());
-			psmt.setFloat(14, dto.getWSD());
-			
-			updatedRow = psmt.executeUpdate();
-			if (updatedRow==1) {
-				return DB_INSERTED;
-			}
-		} catch (SQLException e){
-			sb.append(e.fillInStackTrace() + "\n");
-		} finally {
-			// try 구문에서 중간에 return할 경우 리턴된 후 finally 코드가 실행된다.
-			DBConnect.close(psmt);	
+		if (dao.insert(entity) == 1) {
+			return DB_INSERTED;
 		}
 		
 		return DB_FAILED;

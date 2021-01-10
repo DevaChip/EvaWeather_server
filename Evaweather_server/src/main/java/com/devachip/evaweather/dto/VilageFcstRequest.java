@@ -1,4 +1,4 @@
-package com.devachip.evaweather.model;
+package com.devachip.evaweather.dto;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -16,4 +16,7 @@ public class VilageFcstRequest {
 	private String dataType;// 응답자료형식[ XML | JSON ]
 	private String nx;		// 예보지점 X 좌표[엑셀 참고]
 	private String ny;		// 예보지점 Y 좌표[엑셀 참고]
+	
+	/* DB 조회용 */
+	private String popTime;	// 강수확률 기준 시간
 }

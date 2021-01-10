@@ -8,10 +8,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Types;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -27,10 +23,11 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 
-import com.devachip.evaweather.bean.DBConnect;
 import com.devachip.evaweather.bean.DataBean;
-import com.devachip.evaweather.model.VilageFcst;
-import com.devachip.evaweather.model.VilageFcstRequest;
+import com.devachip.evaweather.domain.VilageFcst;
+import com.devachip.evaweather.dto.VilageFcstRequest;
+import com.devachip.evaweather.persistence.VilageFcstDAO;
+import com.devachip.evaweather.persistence.VilageFcstDAOImpl;
 import com.devachip.evaweather.util.BeanUtils;
 import com.devachip.evaweather.vo.LocationInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -52,23 +49,16 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 	private final int READ_TIMEOUT = 10000;
 	
 	private StringBuffer sb = new StringBuffer();
-	private DBConnect dbConnect;
+	private VilageFcstDAO dao = (VilageFcstDAO) BeanUtils.getBean(VilageFcstDAOImpl.class);
 	
 	@Override
 	protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
-		dbConnect = (DBConnect) BeanUtils.getBean("DBConnect");
-		
 		String jobName = context.getJobDetail().getKey().getName();
 		String jobDetail = context.getJobDetail().getKey().getName();
 		
 		log.debug("===================== [{}] START =====================", jobName);
-		if (dbConnect.getConnection() != null) {
-			getVilageFcst(jobDetail);
-		} else {
-			sb.append("DB Connect Failed. Job Stop.").append("\n");
-		}
-		
-		log.debug(sb.toString());
+		getVilageFcst(jobDetail);
+		log.debug(sb.toString());	// 실행결과 한번에 출력
 		log.debug("===================== [{}] END =====================", jobName);
 	}
 	
@@ -129,9 +119,9 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 			}
 			
 			// 데이터 업데이트 | 삽입
-			List<VilageFcst> dtoList = (List<VilageFcst>)resultMap.get("dtoList");
-			for (VilageFcst dto : dtoList) {
-				int dbResultCode = updateData(dto);
+			List<VilageFcst> entityList = (List<VilageFcst>)resultMap.get("entityList");
+			for (VilageFcst entity : entityList) {
+				int dbResultCode = updateData(entity);
 				
 				switch(dbResultCode) {
 				case DB_UPDATED:
@@ -230,7 +220,7 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 	 * JSON -> List
 	 * API 로부터 받아온 데이터를 객체화
 	 * 
-	 * @return Map{resultCode: 결과코드, dto: 초단기실황 데이터 객체} 
+	 * @return Map{resultCode: 결과코드, entity: 초단기실황 데이터 객체} 
 	 */
 	@SuppressWarnings("unchecked")
 	public Map<String, Object> jsonToObject(String jsonString) {
@@ -271,35 +261,20 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 			}
 			
 			Set<Fcst_Key> keys = dtoMap.keySet();
-			List<VilageFcst> dtoList = new ArrayList<>();
+			List<VilageFcst> entityList = new ArrayList<>();
 			for (Fcst_Key key: keys) {
 				Map<String, Object> category = dtoMap.get(key);
 				
-				VilageFcst dto = new VilageFcst();
-				dto.setFcstDate(key.getFcstDate());
-				dto.setFcstTime(key.getFcstTime());
-				dto.setNx(key.getNx());
-				dto.setNy(key.getNy());
+				VilageFcst entity = new VilageFcst(key.getFcstDate(), key.getFcstTime(), key.getNx(), key.getNy(),
+						(float) category.get("POP"), (float) category.get("PTY"), getFloat(category, "R06"), (float) category.get("REH"),
+						getFloat(category, "S06"), (float) category.get("SKY"), (float) category.get("T3H"), getFloat(category, "TMN"),
+						getFloat(category, "TMX"), (float) category.get("UUU"), (float) category.get("VVV"), getFloat(category, "WAV"),
+						(float) category.get("VEC"), (float) category.get("WSD"));
 				
-				dto.setPOP((float) category.get("POP"));
-				dto.setPTY((float) category.get("PTY"));
-				dto.setR06(Optional.ofNullable(category.get("R06")).map(Float.class::cast).orElse(null));
-				dto.setREH((float) category.get("REH"));
-				dto.setS06(Optional.ofNullable(category.get("S06")).map(Float.class::cast).orElse(null));
-				dto.setSKY((float) category.get("SKY"));
-				dto.setT3H((float) category.get("T3H"));
-				dto.setTMN(Optional.ofNullable(category.get("TMN")).map(Float.class::cast).orElse(null));
-				dto.setTMX(Optional.ofNullable(category.get("TMX")).map(Float.class::cast).orElse(null));
-				dto.setUUU((float) category.get("UUU"));
-				dto.setVVV((float) category.get("VVV"));
-				dto.setWAV(Optional.ofNullable(category.get("WAV")).map(Float.class::cast).orElse(null));
-				dto.setVEC((float) category.get("VEC"));
-				dto.setWSD((float) category.get("WSD"));
-				
-				dtoList.add(dto);
+				entityList.add(entity);
 			}
 			
-			resultMap.put("dtoList", dtoList);
+			resultMap.put("entityList", entityList);
 			return resultMap;
 		} catch(IOException e) {
 			sb.append(e.fillInStackTrace()).append("\n");
@@ -315,101 +290,26 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 	/**
 	 * API 데이터 갱신 | 삽입
 	 * 
-	 * @param dto
+	 * @param entity
 	 * @return DB 작업 코드값 {0:실패, 1:삽입, 2: 갱신}
 	 */
-	public synchronized int updateData(VilageFcst dto) {
-		if (dto==null) {
+	public synchronized int updateData(VilageFcst entity) {
+		if (entity == null) {
 			return DB_FAILED;
 		}
 		
-		Connection conn = dbConnect.getConnection();
-		String updateSQL = "UPDATE VilageFcsts SET POP=?, PTY=?, R06=?, REH=?, S06=?, SKY=?, T3H=?, TMN=?, TMX=?, UUU=?, VVV=?, WAV=?, VEC=?, WSD=? "
-				+ "WHERE fcstDate=? AND fcstTime=? AND nx=? AND ny=?";
+		if (dao.update(entity)==1) {
+			return DB_UPDATED;
+		}
 		
-		String insertSQL = "INSERT INTO VilageFcsts(fcstDate, fcstTime, nx, ny, POP, PTY, R06, REH, S06, SKY, T3H, TMN, TMX, UUU, VVV, WAV, VEC, WSD) "
-				+ "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-		
-		PreparedStatement psmt = null;
-		int updatedRow = 0;
-		try {
-			// 업데이트
-			psmt = conn.prepareStatement(updateSQL);
-			psmt.setFloat(1, dto.getPOP());
-			psmt.setFloat(2, dto.getPTY());
-			setFloat(psmt, 3, dto.getR06());
-			psmt.setFloat(4, dto.getREH());
-			setFloat(psmt, 5, dto.getS06());
-			psmt.setFloat(6, dto.getSKY());
-			psmt.setFloat(7, dto.getT3H());
-			setFloat(psmt, 8, dto.getTMN());
-			setFloat(psmt, 9, dto.getTMX());
-			psmt.setFloat(10, dto.getUUU());
-			psmt.setFloat(11, dto.getVVV());
-			setFloat(psmt, 12, dto.getWAV());
-			psmt.setFloat(13, dto.getVEC());
-			psmt.setFloat(14, dto.getWSD());
-			
-			psmt.setString(15, dto.getFcstDate());
-			psmt.setString(16, dto.getFcstTime());
-			psmt.setInt(17, dto.getNx());
-			psmt.setInt(18, dto.getNy());
-			
-			updatedRow = psmt.executeUpdate();
-			if (updatedRow==1) {
-				return DB_UPDATED;
-			}				
-			
-			// 수정할 데이터가 없을 경우 추가
-			psmt = conn.prepareStatement(insertSQL);
-			psmt.setString(1, dto.getFcstDate());
-			psmt.setString(2, dto.getFcstTime());
-			psmt.setInt(3, dto.getNx());
-			psmt.setInt(4, dto.getNy());
-			
-			psmt.setFloat(5, dto.getPOP());
-			psmt.setFloat(6, dto.getPTY());
-			setFloat(psmt, 7, dto.getR06());
-			psmt.setFloat(8, dto.getREH());
-			setFloat(psmt, 9, dto.getS06());
-			psmt.setFloat(10, dto.getSKY());
-			psmt.setFloat(11, dto.getT3H());
-			setFloat(psmt, 12, dto.getTMN());
-			setFloat(psmt, 13, dto.getTMX());
-			psmt.setFloat(14, dto.getUUU());
-			psmt.setFloat(15, dto.getVVV());
-			setFloat(psmt, 16, dto.getWAV());
-			psmt.setFloat(17, dto.getVEC());
-			psmt.setFloat(18, dto.getWSD());
-			
-			updatedRow = psmt.executeUpdate();
-			if (updatedRow==1) {
-				return DB_INSERTED;
-			}
-		} catch (SQLException e){
-			sb.append(e.fillInStackTrace()).append("\n");
-		} catch (Exception e) {
-			sb.append(e.fillInStackTrace()).append("\n");
-		} finally {
-			// try 구문에서 중간에 return할 경우 리턴된 후 finally 코드가 실행된다.
-			DBConnect.close(psmt);	
+		if (dao.insert(entity)==1) {
+			return DB_INSERTED;
 		}
 		
 		return DB_FAILED;
 	}
 	
-	private PreparedStatement setFloat(PreparedStatement psmt, int idx, Float value) {
-		
-		try {
-			if (value != null) {
-				psmt.setFloat(idx, value.floatValue());
-			} else {
-				psmt.setNull(idx, Types.DECIMAL);
-			}
-		} catch (SQLException e) {
-			sb.append(e.fillInStackTrace()).append("\n");
-		}
-		
-		return psmt;
+	private Float getFloat(Map<String, Object> category, String key) {
+		return Optional.ofNullable(category.get(key)).map(Float.class::cast).orElse(null);
 	}
 }

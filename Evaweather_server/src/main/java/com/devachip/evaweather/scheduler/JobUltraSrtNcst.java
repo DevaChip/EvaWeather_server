@@ -8,9 +8,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -23,10 +20,11 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 
-import com.devachip.evaweather.bean.DBConnect;
 import com.devachip.evaweather.bean.DataBean;
-import com.devachip.evaweather.model.UltraSrtNcst;
-import com.devachip.evaweather.model.VilageFcstRequest;
+import com.devachip.evaweather.domain.UltraSrtNcst;
+import com.devachip.evaweather.dto.VilageFcstRequest;
+import com.devachip.evaweather.persistence.UltraSrtNcstDAO;
+import com.devachip.evaweather.persistence.UltraSrtNcstDAOImpl;
 import com.devachip.evaweather.util.BeanUtils;
 import com.devachip.evaweather.vo.LocationInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -48,23 +46,17 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 	private final int READ_TIMEOUT = 10000;
 	
 	private StringBuffer sb = new StringBuffer();
-	private DBConnect dbConnect;
+	
+	// TODO : Autowired 할 수 있도록 SchedulerFactoryBean 코드로 구현하여 ApplicationContext 설정하기
+	private UltraSrtNcstDAO dao = (UltraSrtNcstDAO) BeanUtils.getBean(UltraSrtNcstDAOImpl.class);
 	
 	@Override
 	protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
-		
-		// TODO : Autowired 할 수 있도록 SchedulerFactoryBean 코드로 구현하여 ApplicationContext 설정하기
-		dbConnect = (DBConnect) BeanUtils.getBean("DBConnect");
-		
 		String jobName = context.getJobDetail().getKey().getName();
 		String jobDetail = context.getJobDetail().getKey().getName();
 		
 		log.debug("===================== [{}] START =====================", jobName);
-		if (dbConnect.getConnection() != null) {
-			getUltraSrtNcsts(jobDetail);
-		} else {
-			sb.append("DB Connect Failed. Job Stop.\n");
-		}
+		getUltraSrtNcsts(jobDetail);
 		log.debug(sb.toString());
 		log.debug("===================== [{}] END =====================", jobName);
 	}
@@ -125,8 +117,8 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 			}
 				
 			// 데이터 업데이트 | 삽입
-			UltraSrtNcst dto = (UltraSrtNcst)resultMap.get("dto");
-			int dbResultCode = updateData(dto);
+			UltraSrtNcst entity = (UltraSrtNcst)resultMap.get("entity");
+			int dbResultCode = updateData(entity);
 			
 			switch(dbResultCode) {
 			case DB_UPDATED:
@@ -224,7 +216,7 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 	 * JSON -> List
 	 * API 로부터 받아온 데이터를 객체화
 	 * 
-	 * @return Map{resultCode: 결과코드, dto: 초단기실황 데이터 객체} 
+	 * @return Map{resultCode: 결과코드, entity: 초단기실황 데이터 객체} 
 	 */
 	@SuppressWarnings("unchecked")
 	public Map<String, Object> jsonToObject(String jsonString) {
@@ -258,22 +250,11 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 				dtoMap.put((String) item.get("category"), Float.parseFloat((String) item.get("obsrValue")));
 			}
 			
-			UltraSrtNcst dto = new UltraSrtNcst();
-			dto.setBaseDate((String) dtoMap.get("baseDate"));
-			dto.setBaseTime((String) dtoMap.get("baseTime"));
-			dto.setNx((int) dtoMap.get("nx"));
-			dto.setNy((int) dtoMap.get("ny"));
+			UltraSrtNcst entity = new UltraSrtNcst((String) dtoMap.get("baseDate"), (String) dtoMap.get("baseTime"), (int) dtoMap.get("nx"), (int) dtoMap.get("ny"),
+					(float) dtoMap.get("PTY"), (float) dtoMap.get("REH"), (float) dtoMap.get("RN1"), (float) dtoMap.get("T1H"),
+					(float) dtoMap.get("UUU"), (float) dtoMap.get("VEC"), (float) dtoMap.get("VVV"), (float) dtoMap.get("WSD")); 
 			
-			dto.setPTY((float) dtoMap.get("PTY"));
-			dto.setREH((float) dtoMap.get("REH"));
-			dto.setRN1((float) dtoMap.get("RN1"));
-			dto.setT1H((float) dtoMap.get("T1H"));
-			dto.setUUU((float) dtoMap.get("UUU"));
-			dto.setVEC((float) dtoMap.get("VEC"));
-			dto.setVVV((float) dtoMap.get("VVV"));
-			dto.setWSD((float) dtoMap.get("WSD"));
-			
-			resultMap.put("dto", dto);
+			resultMap.put("entity", entity);
 			return resultMap;
 		} catch(IOException e) {
 			sb.append(e.fillInStackTrace()).append("\n");
@@ -289,71 +270,20 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 	/**
 	 * API 데이터 갱신 | 삽입
 	 * 
-	 * @param dto
+	 * @param entity
 	 * @return DB 작업 코드값 {0:실패, 1:삽입, 2: 갱신}
 	 */
-	@SuppressWarnings("resource")
-	public synchronized int updateData(UltraSrtNcst dto) {
-		if (dto==null) {
+	public synchronized int updateData(UltraSrtNcst entity) {
+		if (entity == null) {
 			return DB_FAILED;
 		}
 		
-		Connection conn = dbConnect.getConnection();
-		String updateSQL = "UPDATE UltraSrtNcsts SET T1H=?, RN1=?, UUU=?, VVV=?, REH=?, PTY=?, VEC=?, WSD=? "
-				+ "WHERE baseDate=? AND baseTime=? AND nx=? AND ny=?";
+		if (dao.update(entity) ==1) {
+			return DB_UPDATED;
+		}
 		
-		String insertSQL = "INSERT INTO UltraSrtNcsts(baseDate, baseTime, nx, ny, T1H, RN1, UUU, VVV, REH, PTY, VEC, WSD) "
-				+ "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-		
-		PreparedStatement psmt = null;
-		int updatedRow = 0;
-		try {
-			// 업데이트
-			psmt = conn.prepareStatement(updateSQL);
-			psmt.setFloat(1, dto.getT1H());
-			psmt.setFloat(2, dto.getRN1());
-			psmt.setFloat(3, dto.getUUU());
-			psmt.setFloat(4, dto.getVVV());
-			psmt.setFloat(5, dto.getREH());
-			psmt.setFloat(6, dto.getPTY());
-			psmt.setFloat(7, dto.getVEC());
-			psmt.setFloat(8, dto.getWSD());
-			
-			psmt.setString(9, dto.getBaseDate());
-			psmt.setString(10, dto.getBaseTime());
-			psmt.setInt(11, dto.getNx());
-			psmt.setInt(12, dto.getNy());			
-			
-			updatedRow = psmt.executeUpdate();
-			if (updatedRow==1) {
-				return DB_UPDATED;
-			}				
-			
-			// 수정할 데이터가 없을 경우 추가
-			psmt = conn.prepareStatement(insertSQL);
-			psmt.setString(1, dto.getBaseDate());
-			psmt.setString(2, dto.getBaseTime());
-			psmt.setInt(3, dto.getNx());
-			psmt.setInt(4, dto.getNy());
-			
-			psmt.setFloat(5, dto.getT1H());
-			psmt.setFloat(6, dto.getRN1());
-			psmt.setFloat(7, dto.getUUU());
-			psmt.setFloat(8, dto.getVVV());
-			psmt.setFloat(9, dto.getREH());
-			psmt.setFloat(10, dto.getPTY());
-			psmt.setFloat(11, dto.getVEC());
-			psmt.setFloat(12, dto.getWSD());
-			
-			updatedRow = psmt.executeUpdate();
-			if (updatedRow==1) {
-				return DB_INSERTED;
-			}
-		} catch (SQLException e){
-			sb.append(e.fillInStackTrace()).append("\n");
-		} finally {
-			// try 구문에서 중간에 return할 경우 리턴된 후 finally 코드가 실행된다.
-			DBConnect.close(psmt);	
+		if (dao.insert(entity)==1) {
+			return DB_INSERTED;
 		}
 		
 		return DB_FAILED;

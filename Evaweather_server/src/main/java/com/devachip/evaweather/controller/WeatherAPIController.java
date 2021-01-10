@@ -21,13 +21,13 @@ public class WeatherAPIController {
 		this.service = service;
 	}
 
-	@ApiOperation(value="get NowWeather", notes="특정 위치의 현재 날씨 조회")
+	@ApiOperation(value="get Weather And Clothes", notes="특정 위치의 현재 날씨 및 옷 정보 조회")
 	@GetMapping(value = "nowWeather", produces="application/json;charset=UTF-8")
-	public String getVilageFcstInfo(@RequestParam(required=true) String areaCode,
+	public String getVilageFcstInfo(@RequestParam(required=true, defaultValue="man") String gender,
+									@RequestParam(required=true, defaultValue="2800000000") String areaCode,
 									@RequestParam(required=false) String date,
 									@RequestParam(required=false) String time) {
-		String nowWeatherJson = service.getNowWeather(areaCode, date, time); 
-		
+		String nowWeatherJson = service.getNowWeather(gender, areaCode, date, time); 
 		return nowWeatherJson;
 	}
 }

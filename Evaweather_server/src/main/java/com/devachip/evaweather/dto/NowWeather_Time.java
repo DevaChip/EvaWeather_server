@@ -1,4 +1,4 @@
-package com.devachip.evaweather.model;
+package com.devachip.evaweather.dto;
 
 import lombok.Getter;
 import lombok.Setter;

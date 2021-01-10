@@ -1,10 +1,10 @@
-package com.devachip.evaweather.model;
+package com.devachip.evaweather.domain;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
-@Setter
+@AllArgsConstructor
 public class UltraSrtNcst {
 	private String baseDate;
 	private String baseTime;

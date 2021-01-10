@@ -1,4 +1,0 @@
-db.className\com.mysql.cj.jdbc.Driver
-db.userName\evaweather
-db.password\evaweather
-db.url\jdbc:mysql://localhost:3306/evaweather?serverTimezone=UTC&characterEncoding=UTF-8
