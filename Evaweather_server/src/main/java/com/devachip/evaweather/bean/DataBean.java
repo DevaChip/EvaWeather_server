@@ -1,6 +1,7 @@
 package com.devachip.evaweather.bean;
 
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -120,7 +121,7 @@ public class DataBean {
 					
 					switch(Optional.ofNullable(cell).map(Cell::getCellType).orElse(CellType.BLANK)) {
 					case NUMERIC:
-						cells[i] = String.valueOf(cell.getNumericCellValue());
+						cells[i] = new BigDecimal(cell.getNumericCellValue()).toString();
 						break;
 					case STRING:
 						cells[i] = cell.getStringCellValue();
