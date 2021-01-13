@@ -171,11 +171,9 @@ public class DataBean {
 		} catch(Exception e) {
 			log.error(e.fillInStackTrace() + "");
 		} finally {
-			if (wb!=null) {
-				// AutoCloseable 때문에 닫을 필요 없이 자원이 회수된다.
-				// warning 표시를 지우기 위해 추가함.
-				IOUtils.closeQuietly(wb);
-			}
+			// AutoCloseable 때문에 닫을 필요 없이 자원이 회수된다.
+			// warning 표시를 지우기 위해 추가함.
+			IOUtils.closeQuietly(wb);
 		}
 		
 		log.debug("==================== load LocationInfo End ====================");
