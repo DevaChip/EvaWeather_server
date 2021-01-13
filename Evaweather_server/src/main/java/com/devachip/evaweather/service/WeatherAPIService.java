@@ -19,6 +19,8 @@ import org.springframework.stereotype.Service;
 
 import com.devachip.evaweather.base.PropertiesConfig;
 import com.devachip.evaweather.bean.DataBean;
+import com.devachip.evaweather.clothes.Crawler;
+import com.devachip.evaweather.clothes.WebCrawlingFactory;
 import com.devachip.evaweather.dto.NowWeather;
 import com.devachip.evaweather.dto.NowWeather_AirCondition;
 import com.devachip.evaweather.dto.NowWeather_Clothes;
@@ -154,8 +156,14 @@ public class WeatherAPIService {
 		InputStream is  = null;
 		byte[] imgBytes = null;
 		List<NowWeather_Clothes> clothes = new ArrayList<>();
+		Crawler crawler = null; 
 
 		try {
+			String siteName = "무신사";
+			crawler = WebCrawlingFactory.getInstance(siteName);
+			
+			// TODO : 읽어온 엑셀파일에서 경로 및 이미지 파일 이름 가져오기.
+			
 			// 아우터
 			String outerPath = basePath + File.separator + "outer.jpg";
 			
