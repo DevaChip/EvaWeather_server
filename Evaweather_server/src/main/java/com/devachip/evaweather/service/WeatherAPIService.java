@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -146,7 +147,7 @@ public class WeatherAPIService {
 	private boolean setClothes(NowWeather dto, VilageFcstRequest request) {
 		try {
 			String[] siteList = properties.getSiteList();
-			String season = getSeasonByMaxTemp(dto.getMaxTemperature());
+			String season = getSeasonByMonth();
 			
 			Crawler crawler = null;
 			List<NowWeather_Clothes> clothes = new ArrayList<>();
@@ -165,15 +166,21 @@ public class WeatherAPIService {
 		return false;
 	}
 	
-	private String getSeasonByMaxTemp(float maxTemp) {
-		// TODO: 봄, 여름, 가을
+	private String getSeasonByMonth() {
+		Calendar cal = Calendar.getInstance();
 		
-		// 겨울
-		if (maxTemp < 10) {
+		int month = cal.get(Calendar.MONTH) + 1;
+		
+		switch(month) {
+		case 3: case 4: case 5: 
+			return "봄";
+		case 6: case 7: case 8: 
+			return "여름";
+		case 9: case 10:  case 11: 
+			return "가을";
+		default:
 			return "겨울";
 		}
-		
-		return null;
 	}
 	
 	private boolean setSample(NowWeather dto) {
