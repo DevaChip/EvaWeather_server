@@ -13,4 +13,7 @@ public interface NowWeatherDAO {
 	/* 어제, 오늘, 내일 시간대별 예상 기온 */
 	public List<NowWeather_Time> getTime(VilageFcstRequest request);
 	
+	public default String test() {	
+		return "TEST";
+	}
 }

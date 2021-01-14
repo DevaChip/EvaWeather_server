@@ -50,6 +50,7 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 	
 	private StringBuffer sb = new StringBuffer();
 	private VilageFcstDAO dao = (VilageFcstDAO) BeanUtils.getBean(VilageFcstDAOImpl.class);
+	private DataBean dataBean = (DataBean) BeanUtils.getBean(DataBean.class);
 	
 	@Override
 	protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
@@ -82,7 +83,7 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 		int insertedRows = 0;
 		int failedRows = 0;
 		VilageFcstRequest request = new VilageFcstRequest();
-		for (LocationInfo info : DataBean.getLocationInfoList_schedule()) {
+		for (LocationInfo info : dataBean.getLocationInfoList_schedule()) {
 			// 필수 입력값 설정
 			request.setPageNo("1");
 			request.setNumOfRows("9999");
@@ -138,7 +139,7 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 		}
 		
 		sb.append(String.format("AllRows: %d, updatedRows: %d, insertedRows: %d, failedRows: %d",
-				DataBean.getLocationInfoList_schedule().size(), updatedRows, insertedRows, failedRows)).append("\n");
+				dataBean.getLocationInfoList_schedule().size(), updatedRows, insertedRows, failedRows)).append("\n");
 		
 		Date afterD = new Date();
 		String afterTime = timeFormat.format(afterD);

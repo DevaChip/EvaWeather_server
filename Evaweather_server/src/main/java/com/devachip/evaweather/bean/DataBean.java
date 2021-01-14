@@ -35,12 +35,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 public class DataBean {
-	private static Map<String, LocationInfo> locationInfoMap;	// 지역 정보
-	private static List<LocationInfo> locationInfoList_schedule;	// nx, ny 중복값을 제거한 정보
+	private Map<String, LocationInfo> locationInfoMap;	// 지역 정보
+	private List<LocationInfo> locationInfoList_schedule;	// nx, ny 중복값을 제거한 정보
 	
 	// 시트 구분
 	final int LOCATION_INFO_SHEET=0; // 지역 정보
-	final int TEST_SHEET=1;	// 테스트 시트
 	
 	// 행 구분
 	final int LANG=0; 		// 구분
@@ -72,11 +71,11 @@ public class DataBean {
 		loadLocationInfoMap();
 	}
 	
-	public static Map<String, LocationInfo> getLocationInfoMap() {
+	public Map<String, LocationInfo> getLocationInfoMap() {
 		return locationInfoMap;
 	}
 	
-	public static List<LocationInfo> getLocationInfoList_schedule() {
+	public List<LocationInfo> getLocationInfoList_schedule() {
 		return locationInfoList_schedule;
 	}
 	

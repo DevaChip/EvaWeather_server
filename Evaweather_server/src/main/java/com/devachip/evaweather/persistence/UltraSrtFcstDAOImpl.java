@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import com.devachip.evaweather.bean.DBConnect;
@@ -19,7 +18,6 @@ public class UltraSrtFcstDAOImpl implements UltraSrtFcstDAO {
 	private DBConnect dbConnect;
 	private UltraSrtFcstMapper mapper = new UltraSrtFcstMapper();
 	
-	@Autowired
 	public UltraSrtFcstDAOImpl(DBConnect dbConnect) {
 		this.dbConnect = dbConnect;
 	}

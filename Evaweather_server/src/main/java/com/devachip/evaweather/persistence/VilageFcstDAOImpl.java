@@ -5,7 +5,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import com.devachip.evaweather.bean.DBConnect;
@@ -20,7 +19,6 @@ public class VilageFcstDAOImpl implements VilageFcstDAO {
 	private DBConnect dbConnect;
 	private VilageFcstMapper mapper = new VilageFcstMapper();
 	
-	@Autowired
 	public VilageFcstDAOImpl(DBConnect dbConnect) {
 		this.dbConnect = dbConnect;
 	}

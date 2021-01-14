@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import com.devachip.evaweather.bean.DBConnect;
@@ -34,7 +33,6 @@ public class NowWeatherDAOImpl implements NowWeatherDAO {
 	private final int TODAY = 1;
 	private final int TOMORROW = 2;
 	
-	@Autowired
 	public NowWeatherDAOImpl(DBConnect dbConnect) {
 		this.dbConnect = dbConnect; 
 	}

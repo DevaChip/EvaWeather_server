@@ -1,11 +1,6 @@
 package com.devachip.evaweather.service;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -13,8 +8,6 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.util.IOUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.devachip.evaweather.base.PropertiesConfig;
@@ -42,14 +35,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class WeatherAPIService {
-	
-	private PropertiesConfig properties;
+	private DataBean dataBean;
 	private NowWeatherDAO dao;
+	private PropertiesConfig properties;
 	
-	// TODO: Autowired 하지 않아도 의존성 주입이 된다.
-	// 컨트롤러에서 서비스 코드를 의존성 주입할 경우 하위 생성자에도 의존성 주입이 되는지 확인이 필요하다.
-	@Autowired
-	public WeatherAPIService(PropertiesConfig properties, NowWeatherDAO dao) {
+	// Spring 4.3 이상부터 생성자 주입을 사용할 경우, Autowired 어느테이션을 사용하지 않아도 자동 주입된다.
+	public WeatherAPIService(DataBean dataBean, NowWeatherDAO dao, PropertiesConfig properties) {
+		this.dataBean = dataBean;
 		this.dao = dao;
 		this.properties = properties;
 	}
@@ -78,7 +70,7 @@ public class WeatherAPIService {
 		}
 		
 		// 행정구역코드에 맞는 좌표 정보
-		LocationInfo locationInfo = DataBean.getLocationInfoMap().get(areaCode);
+		LocationInfo locationInfo = dataBean.getLocationInfoMap().get(areaCode);
 		
 		VilageFcstRequest request = new VilageFcstRequest();
 		request.setBaseDate(currentDate);
@@ -152,88 +144,36 @@ public class WeatherAPIService {
 	 * @since 2021.01.10
 	 */
 	private boolean setClothes(NowWeather dto, VilageFcstRequest request) {
-		String basePath = properties.getClothes_path();
-		InputStream is  = null;
-		byte[] imgBytes = null;
-		List<NowWeather_Clothes> clothes = new ArrayList<>();
-		Crawler crawler = null; 
-
 		try {
-			String siteName = "무신사";
-			crawler = WebCrawlingFactory.getInstance(siteName);
+			String[] siteList = properties.getSiteList();
+			String season = getSeasonByMaxTemp(dto.getMaxTemperature());
 			
-			// TODO : 읽어온 엑셀파일에서 경로 및 이미지 파일 이름 가져오기.
+			Crawler crawler = null;
+			List<NowWeather_Clothes> clothes = new ArrayList<>();
+			for (String siteName: siteList) {
+				crawler = WebCrawlingFactory.getInstance(siteName);
+				clothes.addAll(crawler.getClothes(season));
+			}
 			
-			// 아우터
-			String outerPath = basePath + File.separator + "outer.jpg";
-			
-			is = new BufferedInputStream(new FileInputStream(outerPath));
-			imgBytes = IOUtils.toByteArray(is);
-			
-			NowWeather_Clothes outer = new NowWeather_Clothes();
-			outer.setImg(imgBytes);
-			outer.setLink("TODO");
-			
-			clothes.add(outer);
-			
-			// 상의
-			String topPath = basePath + File.separator + "top.jpg";
-			
-			is = new BufferedInputStream(new FileInputStream(topPath));
-			imgBytes = IOUtils.toByteArray(is);
-			
-			NowWeather_Clothes top = new NowWeather_Clothes();
-			top.setImg(imgBytes);
-			top.setLink("TODO");
-			
-			clothes.add(top);
-			
-			// 바지
-			String pantsPath = basePath + File.separator + "pants.jpg";
-			
-			is = new BufferedInputStream(new FileInputStream(pantsPath));
-			imgBytes = IOUtils.toByteArray(is);
-			
-			NowWeather_Clothes pants = new NowWeather_Clothes();
-			pants.setImg(imgBytes);
-			pants.setLink("TODO");
-			
-			clothes.add(pants);
-			
-			// 신발
-			String shoosePath = basePath + File.separator + "shoose.jpg";
-			
-			is = new BufferedInputStream(new FileInputStream(shoosePath));
-			imgBytes = IOUtils.toByteArray(is);
-			
-			NowWeather_Clothes shoose = new NowWeather_Clothes();
-			shoose.setImg(imgBytes);
-			shoose.setLink("TODO");
-			
-			clothes.add(shoose);
-			
-			// 악세서리
-			String accessoriesPath = basePath + File.separator + "accessories.jpg";
-			
-			is = new BufferedInputStream(new FileInputStream(accessoriesPath));
-			imgBytes = IOUtils.toByteArray(is);
-			
-			NowWeather_Clothes accessories = new NowWeather_Clothes();
-			accessories.setImg(imgBytes);
-			accessories.setLink("TODO");
-			
-			clothes.add(accessories);
-			
-
 			dto.setClothes(clothes);
+
 			return true;
-		} catch (FileNotFoundException e) {
-			log.error(e.fillInStackTrace() + "");
-		} catch (IOException e) {
+		} catch (Exception e) {
 			log.error(e.fillInStackTrace() + "");
 		}
 		
 		return false;
+	}
+	
+	private String getSeasonByMaxTemp(float maxTemp) {
+		// TODO: 봄, 여름, 가을
+		
+		// 겨울
+		if (maxTemp < 10) {
+			return "겨울";
+		}
+		
+		return null;
 	}
 	
 	private boolean setSample(NowWeather dto) {
