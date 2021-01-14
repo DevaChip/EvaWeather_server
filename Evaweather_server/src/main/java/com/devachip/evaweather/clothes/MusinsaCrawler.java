@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
@@ -60,7 +61,7 @@ public class MusinsaCrawler implements Crawler{
 	private void setItemList() {
 		itemList = new HashMap<>();
 		
-		String[] categoryList = {"상의"};
+		String[] categoryList = {"아우터", "상의", "바지", "신발"};
 		for (String category: categoryList) {
 			String path = Paths.get(properties.getClothes_path(), siteName, category, "itemData.xlsx").toString();
 			itemList.put(category, path);
@@ -85,16 +86,15 @@ public class MusinsaCrawler implements Crawler{
 			List<NowWeather_Clothes> clothes = new ArrayList<>();
 			
 			Set<String> categoryList = itemList.keySet();
-			List<String[]> clothesList = new ArrayList<>();
 			for (String category: categoryList) {
+				List<String[]> clothesList = new ArrayList<>();
+				
 				String path = (String) itemList.get(category);
 				isData = new BufferedInputStream(new FileInputStream(path));
 				
 				wb = new XSSFWorkbook(isData);
 				XSSFSheet sheet = wb.getSheetAt(SHEET1);
 				Row colNamesRow = sheet.getRow(0);
-				
-				String[] cells = new String[colNamesRow.getLastCellNum()];	// row 당 셀 최대 갯수(컬럼명 row는 빈 값이 없기 때문에 최대 갯수가 된다.)
 				
 				sheet.removeRow(colNamesRow);	// 첫 줄 제외(컬럼명)
 				
@@ -104,7 +104,7 @@ public class MusinsaCrawler implements Crawler{
 						continue;
 					}
 					
-					Arrays.fill(cells, "");
+					String[] cells = new String[row.getLastCellNum()];
 					
 					for (int i=0; i < cells.length; i++) {
 						Cell cell = row.getCell(i);
@@ -137,7 +137,7 @@ public class MusinsaCrawler implements Crawler{
 				
 				printClothesList(clothesList);
 				
-				// 옷 추리기
+				// 옷 고르기
 				clothesList = chooseClothes(clothesList);
 				
 				printClothesList(clothesList);
@@ -171,13 +171,16 @@ public class MusinsaCrawler implements Crawler{
 		return null;
 	}
 	
-	// 전체 목록 중 최대 5개 항목으로 추리기
+	// 클라이언트로 전달할 옷 고르기
 	private List<String[]> chooseClothes(List<String[]> clothesList) {
 		try {
-			while(clothesList.size()>5) {
+			Random rand = new Random();
+			rand.setSeed(System.currentTimeMillis());
+			
+			while(clothesList.size()>3) {
 				for (int i=0; i<clothesList.size(); i++) {
-					double random = Math.random();
-					if (random < 0.6) {
+					double random = rand.nextDouble();
+					if (random < 0.03 || 0.95 < random ) {
 						clothesList.remove(i);
 						break;
 					}
