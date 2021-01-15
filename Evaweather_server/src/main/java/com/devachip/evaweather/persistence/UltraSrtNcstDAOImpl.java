@@ -23,61 +23,78 @@ public class UltraSrtNcstDAOImpl implements UltraSrtNcstDAO {
 	}
 	
 	@Override
-	public int update(UltraSrtNcst dto) {
+	public int update(UltraSrtNcst entity) {
 		Connection conn = dbConnect.getConnection();
 		PreparedStatement psmt = null;
 		
 		try {
 			psmt = conn.prepareStatement(mapper.getUpdateSQL());
-			psmt.setFloat(1, dto.getT1H());
-			psmt.setFloat(2, dto.getRN1());
-			psmt.setFloat(3, dto.getUUU());
-			psmt.setFloat(4, dto.getVVV());
-			psmt.setFloat(5, dto.getREH());
-			psmt.setFloat(6, dto.getPTY());
-			psmt.setFloat(7, dto.getVEC());
-			psmt.setFloat(8, dto.getWSD());
+			psmt.setFloat(1, entity.getT1H());
+			psmt.setFloat(2, entity.getRN1());
+			psmt.setFloat(3, entity.getUUU());
+			psmt.setFloat(4, entity.getVVV());
+			psmt.setFloat(5, entity.getREH());
+			psmt.setFloat(6, entity.getPTY());
+			psmt.setFloat(7, entity.getVEC());
+			psmt.setFloat(8, entity.getWSD());
 			
-			psmt.setString(9, dto.getBaseDate());
-			psmt.setString(10, dto.getBaseTime());
-			psmt.setInt(11, dto.getNx());
-			psmt.setInt(12, dto.getNy());			
+			psmt.setString(9, entity.getBaseDate());
+			psmt.setString(10, entity.getBaseTime());
+			psmt.setInt(11, entity.getNx());
+			psmt.setInt(12, entity.getNy());			
 			
 			return psmt.executeUpdate();
 		} catch (SQLException e) {
 			log.error(e.fillInStackTrace() + "");
 		}
 		
-		return 0;
+		return -1;
 	}
 
 	@Override
-	public int insert(UltraSrtNcst dto) {
+	public int insert(UltraSrtNcst entity) {
 		Connection conn = dbConnect.getConnection();
 		PreparedStatement psmt = null;
 		
 		try {
 			psmt = conn.prepareStatement(mapper.getInsertSQL());
-			psmt.setString(1, dto.getBaseDate());
-			psmt.setString(2, dto.getBaseTime());
-			psmt.setInt(3, dto.getNx());
-			psmt.setInt(4, dto.getNy());
+			psmt.setString(1, entity.getBaseDate());
+			psmt.setString(2, entity.getBaseTime());
+			psmt.setInt(3, entity.getNx());
+			psmt.setInt(4, entity.getNy());
 			
-			psmt.setFloat(5, dto.getT1H());
-			psmt.setFloat(6, dto.getRN1());
-			psmt.setFloat(7, dto.getUUU());
-			psmt.setFloat(8, dto.getVVV());
-			psmt.setFloat(9, dto.getREH());
-			psmt.setFloat(10, dto.getPTY());
-			psmt.setFloat(11, dto.getVEC());
-			psmt.setFloat(12, dto.getWSD());		
+			psmt.setFloat(5, entity.getT1H());
+			psmt.setFloat(6, entity.getRN1());
+			psmt.setFloat(7, entity.getUUU());
+			psmt.setFloat(8, entity.getVVV());
+			psmt.setFloat(9, entity.getREH());
+			psmt.setFloat(10, entity.getPTY());
+			psmt.setFloat(11, entity.getVEC());
+			psmt.setFloat(12, entity.getWSD());		
 			
 			return psmt.executeUpdate();
 		} catch (SQLException e) {
 			log.error(e.fillInStackTrace() + "");
 		}
 		
-		return 0;
+		return -1;
+	}
+
+	@Override
+	public int delete(UltraSrtNcst entity) {
+		Connection conn = dbConnect.getConnection();
+		PreparedStatement psmt = null;
+		
+		try {
+			psmt = conn.prepareStatement(mapper.getDeleteSQL());
+			psmt.setString(1, entity.getBaseDate());
+			
+			return psmt.executeUpdate();
+		} catch (SQLException e) {
+			log.error(e.fillInStackTrace() + "");
+		}
+		
+		return -1;
 	}
 
 }

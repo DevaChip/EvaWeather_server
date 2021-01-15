@@ -58,7 +58,7 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 		
 		log.debug("===================== [{}] START =====================", jobName);
 		getUltraSrtNcsts(jobDetail);
-		log.debug(sb.toString());
+		log.debug("\n" + sb.toString());	// 실행결과 한번에 출력
 		log.debug("===================== [{}] END =====================", jobName);
 	}
 	

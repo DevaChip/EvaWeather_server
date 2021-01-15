@@ -9,4 +9,6 @@ public class UltraSrtNcstMapper {
 	
 	private String insertSQL = "INSERT INTO UltraSrtNcsts(baseDate, baseTime, nx, ny, T1H, RN1, UUU, VVV, REH, PTY, VEC, WSD) "
 			+ "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+	
+	private String deleteSQL = "DELETE FROM UltraSrtNcsts WHERE baseDate<?";
 }

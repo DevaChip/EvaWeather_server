@@ -23,6 +23,13 @@
 		<property name="jobClass"
 			value="com.devachip.evaweather.scheduler.JobVilageFcst"></property>
 	</bean>
+	
+	<!-- 오래된 날씨 정보 삭제 작업 -->
+	<bean id="job_deleteOldFcstData"
+		class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+		<property name="jobClass"
+			value="com.devachip.evaweather.scheduler.JobDeleteOldFcstData"></property>
+	</bean>
 
 	<!-- 스케쥴러 전체 관리 -->
 	<bean id="schedulerFactory"
@@ -68,6 +75,16 @@
 					<property name="jobDetail" ref="job_vilageFcst" />
 					<property name="description" value="동네예보 정보 업데이트" />
 					<property name="cronExpression" value="0 10 2/3 * * ?"></property>	
+					<property name="misfireInstruction" value="2"></property>
+				</bean>
+				
+				<!-- 매일 새벽 2시 -->
+				<bean id="trigger_deleteOldFcstData"
+					class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+					<property name="name" value="schedule_deleteOldFcstData" />
+					<property name="jobDetail" ref="job_deleteOldFcstData" />
+					<property name="description" value="오래된 날씨 정보 삭제" />
+					<property name="cronExpression" value="0 0 2 * * ?"></property>	
 					<property name="misfireInstruction" value="2"></property>
 				</bean>
 			</list>

@@ -59,7 +59,7 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 		
 		log.debug("===================== [{}] START =====================", jobName);
 		getVilageFcst(jobDetail);
-		log.debug(sb.toString());	// 실행결과 한번에 출력
+		log.debug("\n" + sb.toString());	// 실행결과 한번에 출력
 		log.debug("===================== [{}] END =====================", jobName);
 	}
 	

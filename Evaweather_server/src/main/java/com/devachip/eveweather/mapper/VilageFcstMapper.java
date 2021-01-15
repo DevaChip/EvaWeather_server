@@ -9,4 +9,6 @@ public class VilageFcstMapper {
 	
 	private String insertSQL = "INSERT INTO VilageFcsts(fcstDate, fcstTime, nx, ny, POP, PTY, R06, REH, S06, SKY, T3H, TMN, TMX, UUU, VVV, WAV, VEC, WSD) "
 			+ "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+	
+	private String deleteSQL = "DELETE FROM VilageFcsts WHERE fcstDate<?";
 }

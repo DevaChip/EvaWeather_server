@@ -38,10 +38,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class MusinsaCrawler implements Crawler{
-	private Map<String, Object> itemList;
-	private PropertiesConfig properties = (PropertiesConfig) BeanUtils.getBean(PropertiesConfig.class);
-	private String siteName = "무신사";
-	
 	// 시트 구분
 	final int SHEET1=0; // 지역 정보
 	
@@ -53,6 +49,12 @@ public class MusinsaCrawler implements Crawler{
 	final int NAME = 4;
 	final int LINK = 5;
 	final int SEASON = 6;
+	final int GENDER = 7;
+	
+	
+	private Map<String, Object> itemList;
+	private PropertiesConfig properties = (PropertiesConfig) BeanUtils.getBean(PropertiesConfig.class);
+	private String siteName = "무신사";
 	
 	public MusinsaCrawler() {
 		setItemList();
@@ -74,7 +76,7 @@ public class MusinsaCrawler implements Crawler{
 	}
 
 	@Override
-	public List<NowWeather_Clothes> getClothes(String season) {
+	public List<NowWeather_Clothes> getClothes(String gender, String season) {
 		String basePath = properties.getClothes_path();
 		InputStream isData = null;
 		InputStream isImg = null;
@@ -129,8 +131,10 @@ public class MusinsaCrawler implements Crawler{
 						}
 					}
 					
-					// 가져온 옷 중 계절에 맞는 옷만 추가
-					if (StringUtils.contains(cells[SEASON], season)) {
+					// 성별, 계절에 맞는 옷만 추가
+					if (StringUtils.contains(cells[GENDER], gender) 
+						&& StringUtils.contains(cells[SEASON], season)) 
+					{
 						clothesList.add(cells);
 					}
 				}

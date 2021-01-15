@@ -9,4 +9,6 @@ public class UltraSrtFcstMapper {
 	
 	private String insertSQL = "INSERT INTO UltraSrtFcsts(fcstDate, fcstTime, nx, ny, T1H, RN1, SKY, UUU, VVV, REH, PTY, LGT, VEC, WSD) "
 			+ "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+	
+	private String deleteSQL = "DELETE FROM UltraSrtFcsts WHERE fcstDate<?";
 }

@@ -35,9 +35,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 public class DataBean {
-	private Map<String, LocationInfo> locationInfoMap;	// 지역 정보
-	private List<LocationInfo> locationInfoList_schedule;	// nx, ny 중복값을 제거한 정보
-	
 	// 시트 구분
 	final int LOCATION_INFO_SHEET=0; // 지역 정보
 	
@@ -63,6 +60,9 @@ public class DataBean {
 	// 편의를 위해 +1 하여 최대값까지 인덱스로 사용할 수 있도록 설정함
 	final int NX_MAX = 145;
 	final int NY_MAX = 148;
+	
+	private Map<String, LocationInfo> locationInfoMap;	// 지역 정보
+	private List<LocationInfo> locationInfoList_schedule;	// nx, ny 중복값을 제거한 정보
 	
 	public DataBean() {
 		if (locationInfoMap != null) {	// 이미 로딩된 경우 생략

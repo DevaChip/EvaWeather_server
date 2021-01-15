@@ -118,7 +118,7 @@ public class WeatherAPIService {
 			dto.setLocationName(locationName);
 			
 			// 옷 정보 세팅
-			setClothes(dto, request);
+			setClothes(gender, dto, request);
 			
 			// 모자란 부분 샘플로 채우기(테스트용)
 			setSample(dto);
@@ -132,9 +132,9 @@ public class WeatherAPIService {
 	}
 	
 	/**
-	 * 날씨에 맞는 옷 정보 세팅
+	 * 성별, 계절에 맞는 옷 정보 세팅
 	 * 
-	 * 날씨에 맞는 옷 정보를 서버 내부 파일로부터 읽어온다.
+	 * 성별과 계절에 맞는 옷 정보를 서버 내부 파일로부터 읽어온다.
 	 * 옷 정보는 크롤링된 데이터를 사용한다.
 	 * 
 	 * @param dto
@@ -144,7 +144,7 @@ public class WeatherAPIService {
 	 * @author idean
 	 * @since 2021.01.10
 	 */
-	private boolean setClothes(NowWeather dto, VilageFcstRequest request) {
+	private boolean setClothes(String gender, NowWeather dto, VilageFcstRequest request) {
 		try {
 			String[] siteList = properties.getSiteList();
 			String season = getSeasonByMonth();
@@ -153,7 +153,9 @@ public class WeatherAPIService {
 			List<NowWeather_Clothes> clothes = new ArrayList<>();
 			for (String siteName: siteList) {
 				crawler = WebCrawlingFactory.getInstance(siteName);
-				clothes.addAll(crawler.getClothes(season));
+				
+				List<NowWeather_Clothes> crawlingList = crawler.getClothes(gender, season); 
+				clothes.addAll(crawlingList);
 			}
 			
 			dto.setClothes(clothes);

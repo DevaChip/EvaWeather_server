@@ -13,5 +13,5 @@ import com.devachip.evaweather.dto.NowWeather_Clothes;
  */
 public interface Crawler {
 	public Map<String, Object> getItemList();
-	public List<NowWeather_Clothes> getClothes(String season);
+	public List<NowWeather_Clothes> getClothes(String gender, String season);
 }
