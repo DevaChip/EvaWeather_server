@@ -1,0 +1,72 @@
+{
+    "location": "11000000",
+    "locationName": "서울시",
+    "currentTemperature": 6,
+    "maxTemperature": 12,
+    "minTemperature": 0,
+    "pop": 30,
+    "sky": 7,
+    "pty": 0,
+    "rn1": 0,
+    "lgt": 0,
+    "airCondition": {
+        "pm10": 30,
+        "pm25": 60,
+        "pm10Grade": 1,
+        "pm25Grade": 1,
+        "o3": 0.043,
+        "o3Grade": 1
+    },
+    "time": [
+        {
+            "date": "어제",
+            "t0": 0.0,
+            "t3": -3,
+            "t6": -2,
+            "t9": 2,
+            "t12": 6,
+            "t15": 5,
+            "t18": 3,
+            "t21": 2
+        },
+        {
+            "date": "오늘",
+            "t0": 0,
+            "t3": -3,
+            "t6": -2,
+            "t9": 2,
+            "t12": 6,
+            "t15": 5,
+            "t18": 3,
+            "t21": 2
+        },
+        {
+            "date": "내일",
+            "t0": 0,
+            "t3": -3,
+            "t6": -2,
+            "t9": 2,
+            "t12": 6,
+            "t15": 5,
+            "t18": 3,
+            "t21": 2
+        }
+    ],
+    "detail": { 
+        "sunRise": "074648",
+        "sunSet": "172357",
+        "sd": 10,
+        "windSpeed": 5.9,
+        "windVector": "NNE",
+        "khaiGrade": 1,
+        "so2Grade": 1,
+        "coGrade": 1,
+        "no2Grade": 1
+    },
+	"clothes": [
+		{
+			"img": "/9j/4AAQSkZJRgABAQAAAQABAAD//gA8Q1JFQVRPUjogZ2QtanBlZyB2MS4wICh1c2luZyBJSkcgSlBFRyB2NjIpLCBxdWFsaXR5ID0gMTAwCv/bAEMABQMEBAQDBQQEBAUFBQYHDAgHBwcHDwsLCQwRDxISEQ8RERMWHBcTFBoVEREYIRgaHR0fHx8TFyIkIh4kHB4fHv/bAEMBBQUFBwYHDggIDh4UERQeHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHv/AABEIAJYAfQMBIgACEQEDEQH/xAAdAAABBAMBAQAAAAAAAAAAAAAAAgQFCAEDCQcG/8QARBAAAQMCBAIGBgcGAwkAAAAAAQACAwQRBQYSIQcxCCJBUWFxEyMygZGhCRRCUnKCsRUkM0OSwRc0o0RiorLCw9Hw8f/EABYBAQEBAAAAAAAAAAAAAAAAAAABAv/EABYRAQEBAAAAAAAAAAAAAAAAAAABEf/aAAwDAQACEQMRAD8AuWhCEAhCEAhC81498WsI4W5dbNM1tXjFY1woaPVzI/mP7mA28Sdh2kAnjJxtyVwukio8bmnqcSmj9JHRUrQ54bvYuJIDQSLDt8F4tN02sDbq9HkSvd92+INF/PqKoWfsyYpmrM1XjeM1clVW1MhfJI87n/wByAGwAAC+fFzyKC8+B9NXKtTLEzFso4nRNcWh74ahk2m53NiG3srK5PzJg2bcuUeYMArWVmH1bNcUjfm0jscDsQeRC5Bgle89FrjTW8NMWdSVvpavL9U4fWqZrt2O7JWA7ahyI+0NuwEB0ZQmeB4pQY3hFLi+FVUdVRVcTZYJmHZzSNv/AJzCeIBCEIBCEIBCEIBaquop6SmkqaqeKCCNup8kjw1rR3knYBNswYtQYDgddjWKTiChoYH1E8h30saCSbduw5Ln3x+4yY5xKzDMymqamhy7C61HRB+nWPvyAHdx+XIILS8Q+krkLLRkpcJkdj9aza0DxHAD4yHn+UOVJeKudMV4g58xHMeKP0mosIYmuJZDGPZa2/YAPiSe1fNOddjwNtt03llYyJzXFo6gF77nZaghJyDUEA33tdZOi9iLnt3WrtJIuluGp5LRta+3YsjLraNuzmn2CWc9w1ct7d6jwRo3FyT8E4wt7Y6oOcbCx5lWCyXRn491PDjCZsv4zRvxLCZKgyxev0SU55O0XFiDsdJI3ub7lW/4ecV8jZ6axmB41EKtw/ydR6uYHuAOzvykrmO12p7SCB1nDZOqSomhqBLTTSQysNxIxxBB8wlV1mQqxdErjpPj8tPkPONVJPiztTcNrX7moa1pcY3n7wDTY9vLna9nVECEIQCEIQV16dGcDhWQKPKdLNpqMalL5wDv6COxsfN5b/S5Udjdd7G94B+S9h6U2bTmzjDi80Uuujw937Ppt7jTESHEeBkMh8iF45Bya7tDbKxSHGwf43Cjq7ULWZdr423NuSfybtKY1E04YY7BzAbg9yFMnBoA03PeViz3nbcjuTiihdWVbIAY49ZtqcQ1o8yeSk8tUzH5npKeZhdH6UAhptckbG/gbFREK4PaNDh8kRXbK14Gog30kc04qGOiexwsSN991pbM5hvpbfyVElSamxRFzbOOon5J5Fe0nkmFPNLUP1ybdgCfwnrEeCLErlTF6vBcx4djWHy+iqqKdtRC/ucwghdRco43SZlyvhmP0J/d8QpY6hgvfTqaCWnxBuD4hcqaTq1AHc136q8XQZzZ+1MgV+VqiXVPg9R6SAE/yJbmw8nh/wDUEosQhCFEC+Y4rZkGUeHOO5h1BslHRvMF+Rld1Yx/W5q+nVdOndmJ2H5AwnL8Mml+JVhmkAPOOFvI/mew/lQUurJXSzSSPcXOPNxNyfFRdISY/wD3vKe/ZKj6El0chPY4hVQ8HUQm80d2ah2c07Au9YhAJc0oNGAxehxRsvo45Q0atEnsu3GxHapzKkF8405LQQJbm3ZZl1Fvh0jUy7XDkRzCl8gt049RhxNy99z5sKsRCVkQc+3PZMjR3kHcpWUapt78u1BYAL9yUNI2BhDR2BOKfdIZu5xS4faRSqVx+u/l/uvb+iHmg5d4yYZDJJopsVDsPlF+ZksY/wDUawe8rw2kJ/aEjLbNapnBqyow/FaeupJDHPBI2SJ4+y5pBB+IUHVdCjsr4tDj2WsMxunt6KvpIqlgB5B7A63zUiogVHOnTjjq7ivFhTX+rwygii09z33kJ97XM+CvGubnSTxF+JccM1yvfqMeIvg90fqwPg0Isee36qZ0/VicB94n5p072SmUZsHeZ/VULjPWWCdM11hjrXJ5JcrdTQ8bojfI4GO6lMjDVmfDm3sHVAb8RZQc1zCHNPuU1kW5zPhZG16poVVGyC04v3f2Sal4aywSpriYbW6o/QJtM4vfpCUZi2YT3ojPXSn2jaGHmVrabP3URtgt9ce7t0gJ1qLXg+KZU5/eHb8wE6dyVV0K6IWNHGeB+Fxvfrkw6aWjcfAO1tHua9o9y9dVY/o/cRfNlHM2Gl1201bDMG9xkY5pP+mPgrOLKVh7msY57yA1ouSewLlXm7FH43mvFcYlPrK6smqXeb3lx/VdM+J2LDAuHOY8YJANHhlRK2/a4Ru0j3mwXLYnrXViwpx6pTEG17d5Tt7hZMS43I8ShW2Mt21GwW/ToYdJ27loYBou74LYAWR77nuRGWEGOymsibZmwve1qtqgr2Y4gbqeyINeYsL7HGsYPfsgiag+tH4R2eAWlh9YdJF+3wS6y5laAfstv8AtUdmv27VaFytaLuc7fxK0k9ZbJGgOBJ2Ow8FplGk7KDbTH1x8k7O6Y0zuuSe5PNQsixZv6PzFjDnjMOCl1mVeHNqLd7opA0fKUq5659dDDFhhnHrCoXkBmIU9RSE9xMZeP+JgHvXQVQrzvpJNjk4IZqilqBTsfRW9IRyOtth7zt71zXkjDXH1rTur79ODFTh/A6opQ6xxGvgpiO8AmX/thUBu4nclWB0Kd0kTnNkb1RcqLhu7reNynZ9m57kziJLtI2F0qHTCHOBI6o5JT33cW961lwaLDkhty+5QKFywgKayU90eZcL0n2atpAUQ3YKUyWb5mw08/wB7Zt70EXJ/F3N7tHb4BJJsCeaXOSZGbEdUfoEl3JBkOD4yD2rS/caSNwgOLdiiTrNuOYQFAx8tYYWkAkXuU8lj0HSXt2UfSnVMSRvZOSDyukHpnRohi/xwytJJWNiDK9hG3tHcBvPtvZdJWm4XKbI2KvwTOWDYwHEGhroagfkeHf2XVeFwdGCDcEXBSqrH9IPVFmScuUl9pcRkkt+GO3/WqVXsVb36Q+p9Tk6kB3LqyRw90IH91T/VZyQbJDZqb00TnC4c0HxWycgMJvzTeEXiG5abdhREhFQ1DzdrWu8itv1CqaLmI/EJlE+VlgyV48QbLeKqpDbGaQ+bigxOyWL2mEe8KTyU0jMmFgg3+ts/UKDnmke7cnzvuvocjgSZowrc7VbO3xCCIqGuMjRGLkNF7LMVPO/qtYXFYmJjk6jz1rX+Cw2eZnsPcPIoNzsOqu2IgeJCbyUs7NnFjfesyVFS7nPJb8ZTd+txBdI7x3QJjBZUHe+ycuOyZ3DahvvTokBtwgXAbSA+K6t5MqTWZSwirJuZ6GGS/wCKMFcooT1l1G4N1Iq+E2Uqi9y/BaQnz9C2/wA0q1Vj6QbE6SfN2XaGGqhllpaSYzRskBdG5zm2DgORsAd1VzY7r3fjfwC4u4lxLzPjtFlp+J0dZiU9TBU09TES+N7y5vULg4WBAtba3duvJK3hZxNoXuM+R8zRljdTicNlsB56bIj5+obdth2LRDMzSLut5pU8GK08wp6qiqI5XGwY+Itcb8tlZTCOhxjmJYBQYk7NcNFUVVHFPJST0LtUEjmBxjcQ77JNr27EFb46iC38UDzS2zRH+Ywj8QVl5OhTj/oLw52w50tx1X0b2tt5hx/RNZOhXnESgR5uwR0dusXRSgg+Vj+qgrc6WAO/iNv5r6DhzUxuzjhcTWumcZupGzcudpOm3vsvcGdC3N2h+vN2CteD1AIpSD57C3zWWdDLOsEzJIM34MHNdfUGStIHhYeaCu9XVUjp3Nil2DiAHixtcpBmiAuZG/FWJp+hjnGSsaKvNeCsgc4+kkjZK94HeGkAE3/3gpJ3QqxP0Z055pi/svh7gP8AnV0VjE0R3EjfitL5o7n1jfirKu6FmZwds5YUdx/s0g2Tql6FWLOjH1rPFJG/a4joXPHjzcFBVkysfKA096fNA0gr1Dj9wGxPhFhOFYocTdjUNbNLFLKylMbKdzQ0sB6x3cC7u9krzPB8vZrx6QRYPgeKV7nAkClpXycufshUIY4NdzXS3oz4lS4hwQyuaeqhndBQRwyiOQOMbmi2l1uRtbY965/YHwU4s4tK1lJkTHxqJ3qKV0Def3pNI+atx0MuGOfuH+F5kGZ6SPCfr8tP6CB0rJifRiTU7qEgX1tHO5sgsnYJPo2XvpCEKBD6eB72vfExzmm7SWgkFbbDuQhBiw7kWHchCA0juRpb3IQgNLe5Fh3IQgLDuRYdyEIEyxRyxmOSNr2Hm1wuChsUbGhrWNa0dgFghCBQaB2LNghCD//Z",
+			"link": "https://store.musinsa.com/app/goods/1539383"
+		}
+	]
+}
