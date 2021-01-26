@@ -20,6 +20,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 
+import com.devachip.evaweather.base.PropertiesConfig;
 import com.devachip.evaweather.bean.DataBean;
 import com.devachip.evaweather.domain.UltraSrtNcst;
 import com.devachip.evaweather.dto.VilageFcstRequest;
@@ -50,6 +51,8 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 	// TODO : Autowired 할 수 있도록 SchedulerFactoryBean 코드로 구현하여 ApplicationContext 설정하기
 	private UltraSrtNcstDAO dao = (UltraSrtNcstDAO) BeanUtils.getBean(UltraSrtNcstDAOImpl.class);
 	private DataBean dataBean = (DataBean) BeanUtils.getBean(DataBean.class);
+	
+	private PropertiesConfig properties = (PropertiesConfig) BeanUtils.getBean(PropertiesConfig.class);
 	
 	@Override
 	protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
@@ -141,8 +144,8 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 		String afterTime = timeFormat.format(afterD);
 		sb.append(String.format("[%s][Scheduler] %s End", afterTime, jobDetail)).append("\n");
 		
-		long runTime = (afterD.getTime() - d.getTime())/1000;
-		sb.append(String.format("runTime: %dm %ds", runTime/60, runTime%60));
+		float runTime = (float) ((afterD.getTime() - d.getTime())/1000.0);
+		sb.append(String.format("runTime: %dm %.3fs", (int) (runTime/60), runTime%60));
 	}
 	
 	
@@ -156,6 +159,8 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 	public String getVilageFcstData(String apiName, VilageFcstRequest request) {
 		StringBuffer sb = new StringBuffer();
 
+		long startTime = new Date().getTime();
+		
 		try {
 			// URL 설정
 			/* 필수 */
@@ -208,6 +213,12 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 			sb.append(e.fillInStackTrace()).append("\n");
 		} catch (IOException e) {
 			sb.append(e.fillInStackTrace()).append("\n");
+		} finally {
+			if (properties.isDebugMode_scheduler()) {
+				long endTime = new Date().getTime();
+				float runTime = (float) ((endTime - startTime)/1000.0);
+				log.debug("({}, {}) API runTime : {}s", request.getNx(), request.getNy(), runTime%60);
+			}
 		}
 		
 		return null;
@@ -224,6 +235,7 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 		Map<String, Object> resultMap = new HashMap<String, Object>();
 		ObjectMapper mapper = new ObjectMapper();
 		
+		long startTime = new Date().getTime();
 		try {
 			Map<String, Object> map = mapper.readValue(jsonString, Map.class);
 			
@@ -263,6 +275,13 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 		} catch(Exception e) {
 			sb.append(e.fillInStackTrace()).append("\n");
 			resultMap = new HashMap<>();
+		} finally {
+			if (properties.isDebugMode_scheduler()) {
+				long endTime = new Date().getTime();
+				float runTime = (float) ((endTime - startTime)/1000.0);
+				
+				log.debug("jsonToObject runTime : {}s", runTime%60);
+			}
 		}
 		
 		return resultMap;
@@ -275,18 +294,28 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 	 * @return DB 작업 코드값 {0:실패, 1:삽입, 2: 갱신}
 	 */
 	public synchronized int updateData(UltraSrtNcst entity) {
-		if (entity == null) {
-			return DB_FAILED;
-		}
+		long startTime = new Date().getTime();
 		
-		if (dao.update(entity) ==1) {
-			return DB_UPDATED;
+		try {
+			if (entity == null) {
+				return DB_FAILED;
+			}
+			
+			if (dao.update(entity) ==1) {
+				return DB_UPDATED;
+			}
+			
+			if (dao.insert(entity)==1) {
+				return DB_INSERTED;
+			}
+		} finally {
+			if (properties.isDebugMode_scheduler()) {
+				long endTime = new Date().getTime();
+				float runTime = (float) ((endTime - startTime)/1000.0);
+				log.debug("({}, {}) DB update runTime : {}s", entity.getNx(), entity.getNy(), runTime%60);
+			}
 		}
-		
-		if (dao.insert(entity)==1) {
-			return DB_INSERTED;
-		}
-		
+				
 		return DB_FAILED;
 	}
 }

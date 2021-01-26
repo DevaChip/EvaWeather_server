@@ -54,7 +54,7 @@
 					<property name="name" value="schedule_ultraSrtNcst" />
 					<property name="jobDetail" ref="job_ultraSrtNcst" />
 					<property name="description" value="초단기실황 정보 업데이트" />
-					<property name="cronExpression" value="0 40/10 * * * ?"></property>
+					<property name="cronExpression" value="0 40 * * * ?"></property>
 					<property name="misfireInstruction" value="2"></property>
 				</bean>
 				

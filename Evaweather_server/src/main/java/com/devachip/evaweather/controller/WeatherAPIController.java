@@ -27,7 +27,6 @@ public class WeatherAPIController {
 									@RequestParam(required=true, defaultValue="2800000000") String areaCode,
 									@RequestParam(required=false) String date,
 									@RequestParam(required=false) String time) {
-		String nowWeatherJson = service.getNowWeather(gender, areaCode, date, time); 
-		return nowWeatherJson;
+		return service.getNowWeather(gender, areaCode, date, time);
 	}
 }

@@ -36,4 +36,8 @@ public class PropertiesConfig {
 	
 	@Value("${clothes.siteList}")
 	String[] siteList;
+	
+	/* 스케줄러 디버그 모드 */
+	@Value("${scheduler.debugMode}")
+	boolean isDebugMode_scheduler;
 }

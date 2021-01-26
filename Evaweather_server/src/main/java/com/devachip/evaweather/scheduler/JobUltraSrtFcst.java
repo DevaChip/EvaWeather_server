@@ -22,6 +22,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 
+import com.devachip.evaweather.base.PropertiesConfig;
 import com.devachip.evaweather.bean.DataBean;
 import com.devachip.evaweather.domain.UltraSrtFcst;
 import com.devachip.evaweather.dto.VilageFcstRequest;
@@ -50,6 +51,8 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 	private StringBuffer sb = new StringBuffer();
 	private UltraSrtFcstDAO dao = (UltraSrtFcstDAO) BeanUtils.getBean(UltraSrtFcstDAOImpl.class);
 	private DataBean dataBean = (DataBean) BeanUtils.getBean(DataBean.class);
+	
+	private PropertiesConfig properties = (PropertiesConfig) BeanUtils.getBean(PropertiesConfig.class);
 	
 	@Override
 	protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
@@ -145,8 +148,8 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 		String afterTime = timeFormat.format(afterD);
 		sb.append(String.format("[%s][Scheduler] %s End\n", afterTime, jobDetail));
 		
-		long runTime = (afterD.getTime() - d.getTime())/1000;
-		sb.append(String.format("runTime: %dm %ds", runTime/60, runTime%60));
+		float runTime = (float) ((afterD.getTime() - d.getTime())/1000.0);
+		sb.append(String.format("runTime: %dm %.3fs", (int) (runTime/60), runTime%60));
 	}
 	
 	
@@ -160,6 +163,8 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 	public String getVilageFcstData(String apiName, VilageFcstRequest request) {
 		StringBuffer sb = new StringBuffer();
 
+		long startTime = new Date().getTime();
+		
 		try {
 			// URL 설정
 			/* 필수 */
@@ -212,6 +217,12 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 			sb.append(e.fillInStackTrace() + "\n");
 		} catch (IOException e) {
 			sb.append(e.fillInStackTrace() + "\n");
+		} finally {
+			if (properties.isDebugMode_scheduler()) {
+				long endTime = new Date().getTime();
+				float runTime = (float) ((endTime - startTime)/1000.0);
+				log.debug("({}, {}) API runTime : {}s", request.getNx(), request.getNy(), runTime%60);
+			}
 		}
 		
 		return null;
@@ -228,6 +239,7 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 		Map<String, Object> resultMap = new HashMap<String, Object>();
 		ObjectMapper mapper = new ObjectMapper();
 		
+		long startTime = new Date().getTime();
 		try {
 			Map<String, Object> map = mapper.reader().readValue(jsonString, Map.class);
 			
@@ -281,6 +293,12 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 		} catch(Exception e) {
 			sb.append(e.fillInStackTrace() + "\n");
 			resultMap = new HashMap<>();
+		} finally {
+			if (properties.isDebugMode_scheduler()) {
+				long endTime = new Date().getTime();
+				float runTime = (float) ((endTime - startTime)/1000.0);
+				log.debug("jsonToObject runTime : {}s", runTime%60);
+			}
 		}
 		
 		return resultMap;
@@ -293,16 +311,26 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 	 * @return DB 작업 코드값 {0:실패, 1:삽입, 2: 갱신}
 	 */
 	public synchronized int updateData(UltraSrtFcst entity) {
-		if (entity == null) {
-			return DB_FAILED;
-		}
+		long startTime = new Date().getTime();
 		
-		if (dao.update(entity) == 1) {
-			return DB_UPDATED;
-		}
-		
-		if (dao.insert(entity) == 1) {
-			return DB_INSERTED;
+		try {
+			if (entity == null) {
+				return DB_FAILED;
+			}
+			
+			if (dao.update(entity) == 1) {
+				return DB_UPDATED;
+			}
+			
+			if (dao.insert(entity) == 1) {
+				return DB_INSERTED;
+			}
+		} finally {
+			if (properties.isDebugMode_scheduler()) {
+				long endTime = new Date().getTime();
+				float runTime = (float) ((endTime - startTime)/1000.0);
+				log.debug("({}, {}) updateData runTime : {}s", entity.getNx(), entity.getNy(), runTime%60);
+			}
 		}
 		
 		return DB_FAILED;

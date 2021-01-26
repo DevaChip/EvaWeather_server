@@ -6,7 +6,7 @@ import lombok.Getter;
 public class NowWeatherMapper {
 	private String selectData = 
 			"SELECT "
-			+ "IFNULL(usn.T1H, usf.T1H) AS currentTemperature, IFNULL(usn.PTY, usf.PTY) AS pty, IFNULL(usn.RN1, usf.RN1) AS rn1, "
+			+ "IFNULL(usn.T1H, usf.T1H) AS currentTemperature, IFNULL(usn.PTY, usf.PTY) AS pty, IFNULL(usn.RN1, usf.RN1) AS rn1, usf.LGT AS lgt, "
 			+ "IFNULL(usn.REH, usf.REH) AS sd, IFNULL(usn.WSD, usf.WSD) AS windSpeed, IFNULL(usn.VEC, usf.VEC) AS windVector, "
 			+ "usf.SKY AS sky, ttp.TMN AS minTemperature, ttp.TMX AS maxTemperatrue, ttp.POP AS pop "
 			+ "FROM UltraSrtFcsts usf "

@@ -59,6 +59,7 @@ public class NowWeatherDAOImpl implements NowWeatherDAO {
 			float currentTemperature = 0;
 			float pty = 0;
 			float rn1 = 0;
+			float lgt = 0;
 			float sd = 0;
 			float windSpeed = 0;
 			String windVector = "";
@@ -76,16 +77,17 @@ public class NowWeatherDAOImpl implements NowWeatherDAO {
 				currentTemperature = rs.getFloat(1);
 				pty = rs.getFloat(2);
 				rn1 = rs.getFloat(3);
-				sd = rs.getFloat(4);
-				windSpeed = rs.getFloat(5);
-				windVector = Optional.ofNullable(rs.getFloat(6))
+				lgt = rs.getFloat(4);
+				sd = rs.getFloat(5);
+				windSpeed = rs.getFloat(6);
+				windVector = Optional.ofNullable(rs.getFloat(7))
 				                 .map(x-> (int)((x+11.25)/22.5))
 				                 .map(x -> VEC[x])
 				                 .orElse("");
-				sky = rs.getFloat(7);
-				minTemperature = rs.getFloat(8);
-				maxTemperature = rs.getFloat(9);
-				pop = rs.getFloat(10);
+				sky = rs.getFloat(8);
+				minTemperature = rs.getFloat(9);
+				maxTemperature = rs.getFloat(10);
+				pop = rs.getFloat(11);
 			}
 			
 			// 초단기실황 | 초단기예보
@@ -94,6 +96,7 @@ public class NowWeatherDAOImpl implements NowWeatherDAO {
 			dto.setRn1(rn1);
 			
 			// 초단기예보
+			dto.setLgt(lgt);
 			dto.setSky(sky);
 			
 			// 동네예보

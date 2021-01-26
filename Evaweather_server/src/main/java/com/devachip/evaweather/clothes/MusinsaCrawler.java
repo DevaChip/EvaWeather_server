@@ -8,7 +8,6 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -139,12 +138,8 @@ public class MusinsaCrawler implements Crawler{
 					}
 				}
 				
-				printClothesList(clothesList);
-				
 				// 옷 고르기
 				clothesList = chooseClothes(clothesList);
-				
-				printClothesList(clothesList);
 				
 				// 항목에 대한 이미지, 링크 가져오기
 				for(String[] clothesData: clothesList) {
@@ -197,13 +192,5 @@ public class MusinsaCrawler implements Crawler{
 		}		
 		
 		return null;
-	}
-	
-	private void printClothesList(List<String[]> list) {
-		log.debug("====================================");
-		for(String[] item: list) {
-			log.debug(Arrays.toString(item));
-		}
-		log.debug("====================================\n");
 	}
 }

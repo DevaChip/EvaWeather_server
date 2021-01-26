@@ -16,7 +16,8 @@ public class NowWeather {
 	private float pop;	// 강수확률
 	private float sky;	// 하늘상태(SKY)
 	private float pty;	// 강수형태(PTY)
-	private float rn1;	// 1시간 강수량(RN1)	
+	private float rn1;	// 1시간 강수량(RN1)
+	private float lgt;	// 낙뢰정보(LGT)
 	
 	private NowWeather_AirCondition airCondition;	// 대기상태
 	private List<NowWeather_Time> time;	// 어제, 오늘, 내일 기온
