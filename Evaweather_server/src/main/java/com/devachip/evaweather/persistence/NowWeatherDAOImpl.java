@@ -14,8 +14,9 @@ import org.springframework.stereotype.Repository;
 
 import com.devachip.evaweather.bean.DBConnect;
 import com.devachip.evaweather.dto.NowWeather;
+import com.devachip.evaweather.dto.NowWeather_DayInfo;
+import com.devachip.evaweather.dto.NowWeather_DayInfo_TimeWeather;
 import com.devachip.evaweather.dto.NowWeather_Detail;
-import com.devachip.evaweather.dto.NowWeather_Time;
 import com.devachip.evaweather.dto.VilageFcstRequest;
 import com.devachip.eveweather.mapper.NowWeatherMapper;
 
@@ -123,13 +124,13 @@ public class NowWeatherDAOImpl implements NowWeatherDAO {
 	}
 
 	@Override
-	public List<NowWeather_Time> getTime(VilageFcstRequest request) {
+	public List<NowWeather_DayInfo> getDaysInfo(VilageFcstRequest request) {
 		Connection conn = dbConnect.getConnection();
 		PreparedStatement psmt = null;
 		ResultSet rs = null;
 		
 		try {
-			psmt = conn.prepareStatement(mapper.getSelectTime());
+			psmt = conn.prepareStatement(mapper.getSelectDayInfo());
 			
 			psmt.setString(1, request.getBaseDate());
 			psmt.setString(2, request.getBaseDate());
@@ -138,13 +139,19 @@ public class NowWeatherDAOImpl implements NowWeatherDAO {
 			
 			rs = psmt.executeQuery();
 			
-			List<NowWeather_Time> timeList = new ArrayList<>(Arrays.asList(
-					new NowWeather_Time[] { new NowWeather_Time(), new NowWeather_Time(), new NowWeather_Time() }));
+			List<NowWeather_DayInfo> dayInfoList = new ArrayList<>(Arrays.asList(
+					new NowWeather_DayInfo[] { new NowWeather_DayInfo(), new NowWeather_DayInfo(), new NowWeather_DayInfo() }));
 			String currentDate = request.getBaseDate();
 			while(rs.next()) {
 				String fcstDate = rs.getString(1);
 				String fcstTime = rs.getString(2);
-				float T3H = rs.getFloat(3);
+				float t3h = rs.getFloat(3);
+				float pop = rs.getFloat(4);
+				float sky = rs.getFloat(5);
+				float pty = rs.getFloat(6);
+				float rn1 = rs.getFloat(7);
+				
+				NowWeather_DayInfo_TimeWeather timeWeather = new NowWeather_DayInfo_TimeWeather(t3h, pop, sky, pty, rn1);
 				
 				int idx = 0;
 				if (StringUtils.compare(fcstDate, currentDate)>0) {
@@ -155,34 +162,34 @@ public class NowWeatherDAOImpl implements NowWeatherDAO {
 					idx = YESTERDAY;
 				}
 				
-				NowWeather_Time time = timeList.get(idx);
-				time.setDate(fcstDate);
+				NowWeather_DayInfo dayInfo = dayInfoList.get(idx);
+				dayInfo.setDate(fcstDate);
 				
 				switch(fcstTime) {
 				case "0000":
-					time.setT0(T3H); break;
+					dayInfo.setT0(timeWeather); break;
 				case "0300":
-					time.setT3(T3H); break;
+					dayInfo.setT3(timeWeather); break;
 				case "0600":
-					time.setT6(T3H); break;
+					dayInfo.setT6(timeWeather); break;
 				case "0900":
-					time.setT9(T3H); break;
+					dayInfo.setT9(timeWeather); break;
 				case "1200":
-					time.setT12(T3H); break;
+					dayInfo.setT12(timeWeather); break;
 				case "1500":
-					time.setT15(T3H); break;
+					dayInfo.setT15(timeWeather); break;
 				case "1800":
-					time.setT18(T3H); break;
+					dayInfo.setT18(timeWeather); break;
 				case "2100":
-					time.setT21(T3H); break;
+					dayInfo.setT21(timeWeather); break;
 				default:
 					break;
 				}
 				
-				timeList.set(idx, time);
+				dayInfoList.set(idx, dayInfo);
 			}
 			
-			return timeList;
+			return dayInfoList;
 		} catch (SQLException e) {
 			log.error(e.fillInStackTrace() + "");
 		} finally {

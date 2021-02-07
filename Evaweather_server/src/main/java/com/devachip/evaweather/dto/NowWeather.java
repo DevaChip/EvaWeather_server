@@ -20,7 +20,7 @@ public class NowWeather {
 	private float lgt;	// 낙뢰정보(LGT)
 	
 	private NowWeather_AirCondition airCondition;	// 대기상태
-	private List<NowWeather_Time> time;	// 어제, 오늘, 내일 기온
+	private List<NowWeather_DayInfo> daysInfo;	// 어제, 오늘, 내일 기온
 	private NowWeather_Detail detail;	// 상세정보
 	
 	private List<NowWeather_Clothes> clothes;	// 옷 정보

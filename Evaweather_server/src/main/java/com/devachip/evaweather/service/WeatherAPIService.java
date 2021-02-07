@@ -19,7 +19,7 @@ import com.devachip.evaweather.dto.NowWeather;
 import com.devachip.evaweather.dto.NowWeather_AirCondition;
 import com.devachip.evaweather.dto.NowWeather_Clothes;
 import com.devachip.evaweather.dto.NowWeather_Detail;
-import com.devachip.evaweather.dto.NowWeather_Time;
+import com.devachip.evaweather.dto.NowWeather_DayInfo;
 import com.devachip.evaweather.dto.VilageFcstRequest;
 import com.devachip.evaweather.persistence.NowWeatherDAO;
 import com.devachip.evaweather.vo.LocationInfo;
@@ -110,8 +110,8 @@ public class WeatherAPIService {
 			 * 
 			 * 한줄로 출력하기 애매하여 따로 구하기로 함
 			 */
-			List<NowWeather_Time> timeList = dao.getTime(request);
-			dto.setTime(timeList);
+			List<NowWeather_DayInfo> timeList = dao.getDaysInfo(request);
+			dto.setDaysInfo(timeList);
 			
 			// 행정구역코드, 지역이름 세팅
 			dto.setAreaCode(areaCode);

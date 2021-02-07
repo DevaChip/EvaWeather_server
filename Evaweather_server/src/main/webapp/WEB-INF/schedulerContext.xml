@@ -48,7 +48,7 @@
 		
 		<property name="triggers">
 			<list>
-				<!-- 40분부터 10분마다 -->
+				<!-- 40분부터 10분마다 --> <!-- 매 시각 40분 -->
 				<bean id="trigger_ultraSrtNcst"
 					class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
 					<property name="name" value="schedule_ultraSrtNcst" />

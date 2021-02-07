@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public class UltraSrtNcst {
-	private String tableName = "UltraSrtNcsts";
+	public static String tableName = "UltraSrtNcsts";
 	
 	final private String baseDate;
 	final private String baseTime;

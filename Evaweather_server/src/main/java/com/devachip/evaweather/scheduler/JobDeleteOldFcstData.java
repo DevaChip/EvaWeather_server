@@ -65,10 +65,10 @@ public class JobDeleteOldFcstData extends QuartzJobBean{
 		int updatedRow = dao.delete(entity);
 		
 		if (updatedRow>-1) {
-			sb.append(String.format("[%s] Data prior to base date has been successfully deleted. baseDate: %s, updatedRow: %d\n", entity.getTableName(), baseDate, updatedRow));
+			sb.append(String.format("[%s] Data prior to base date has been successfully deleted. baseDate: %s, updatedRow: %d\n", UltraSrtNcst.tableName, baseDate, updatedRow));
 			return true;
 		} else {
-			sb.append(String.format("[%s] Data DB update Failed. baseDate: %s\n", entity.getTableName(), entity.getBaseDate()));
+			sb.append(String.format("[%s] Data DB update Failed. baseDate: %s\n", UltraSrtNcst.tableName, entity.getBaseDate()));
 		}
 		return false;
 	}
@@ -81,10 +81,10 @@ public class JobDeleteOldFcstData extends QuartzJobBean{
 		int updatedRow = dao.delete(entity);
 		
 		if (updatedRow>-1) {
-			sb.append(String.format("[%s] Data prior to base date has been successfully deleted. baseDate: %s, updatedRow: %d\n", entity.getTableName(), baseDate, updatedRow));
+			sb.append(String.format("[%s] Data prior to base date has been successfully deleted. baseDate: %s, updatedRow: %d\n", UltraSrtFcst.tableName, baseDate, updatedRow));
 			return true;
 		} else {
-			sb.append(String.format("[%s] Data DB update Failed. baseDate: %s\n", entity.getTableName(), entity.getFcstDate()));
+			sb.append(String.format("[%s] Data DB update Failed. baseDate: %s\n", UltraSrtFcst.tableName, entity.getFcstDate()));
 		}
 		return false;
 	}
@@ -97,10 +97,10 @@ public class JobDeleteOldFcstData extends QuartzJobBean{
 		int updatedRow = dao.delete(entity);
 		
 		if (updatedRow>-1) {
-			sb.append(String.format("[%s] Data prior to base date has been successfully deleted. baseDate: %s, updatedRow: %d\n", entity.getTableName(), baseDate, updatedRow));
+			sb.append(String.format("[%s] Data prior to base date has been successfully deleted. baseDate: %s, updatedRow: %d\n", VilageFcst.tableName, baseDate, updatedRow));
 			return true;
 		} else {
-			sb.append(String.format("[%s] Data DB update Failed. baseDate: %s\n", entity.getTableName(), entity.getFcstDate()));
+			sb.append(String.format("[%s] Data DB update Failed. baseDate: %s\n", VilageFcst.tableName, entity.getFcstDate()));
 		}
 		return false;
 	}

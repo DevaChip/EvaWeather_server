@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public class VilageFcst {
-	private String tableName = "VilageFcsts";
+	public static String tableName = "VilageFcsts";
 	
 	final private String fcstDate;
 	final private String fcstTime;
