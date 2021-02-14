@@ -1,4 +1,4 @@
-package com.devachip.evaweather.clothes;
+package com.devachip.evaweather.crawler;
 
 import java.util.List;
 import java.util.Map;

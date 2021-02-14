@@ -1,4 +1,4 @@
-package com.devachip.evaweather.clothes;
+package com.devachip.evaweather.crawler.musinsa;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
@@ -24,6 +24,7 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import com.devachip.evaweather.base.PropertiesConfig;
+import com.devachip.evaweather.crawler.Crawler;
 import com.devachip.evaweather.dto.clothesapi.Clothes;
 import com.devachip.evaweather.util.BeanUtils;
 

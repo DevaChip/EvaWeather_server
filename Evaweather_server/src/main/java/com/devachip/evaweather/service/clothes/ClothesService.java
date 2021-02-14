@@ -7,8 +7,8 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.devachip.evaweather.base.PropertiesConfig;
-import com.devachip.evaweather.clothes.Crawler;
-import com.devachip.evaweather.clothes.WebCrawlingFactory;
+import com.devachip.evaweather.crawler.Crawler;
+import com.devachip.evaweather.crawler.CrawlerFactory;
 import com.devachip.evaweather.dto.clothesapi.Clothes;
 import com.devachip.evaweather.dto.clothesapi.ClothesResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -49,7 +49,7 @@ public class ClothesService {
 			Crawler crawler = null;
 			List<Clothes> clothes = new ArrayList<>();
 			for (String siteName: siteList) {
-				crawler = WebCrawlingFactory.getInstance(siteName);
+				crawler = CrawlerFactory.getInstance(siteName);
 				
 				List<Clothes> crawlingList = crawler.getClothes(gender, season); 
 				clothes.addAll(crawlingList);
