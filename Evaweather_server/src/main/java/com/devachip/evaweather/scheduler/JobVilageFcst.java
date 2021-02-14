@@ -26,7 +26,7 @@ import org.springframework.scheduling.quartz.QuartzJobBean;
 import com.devachip.evaweather.base.PropertiesConfig;
 import com.devachip.evaweather.bean.DataBean;
 import com.devachip.evaweather.domain.VilageFcst;
-import com.devachip.evaweather.dto.VilageFcstRequest;
+import com.devachip.evaweather.dto.weatherapi.VilageFcstRequest;
 import com.devachip.evaweather.persistence.VilageFcstDAO;
 import com.devachip.evaweather.persistence.VilageFcstDAOImpl;
 import com.devachip.evaweather.util.BeanUtils;

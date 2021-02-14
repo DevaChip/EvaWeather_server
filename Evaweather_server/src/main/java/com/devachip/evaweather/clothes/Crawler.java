@@ -3,7 +3,7 @@ package com.devachip.evaweather.clothes;
 import java.util.List;
 import java.util.Map;
 
-import com.devachip.evaweather.dto.NowWeather_Clothes;
+import com.devachip.evaweather.dto.clothesapi.Clothes;
 
 /**
  * 크롤링을 위한 인터페이스 구현
@@ -13,5 +13,5 @@ import com.devachip.evaweather.dto.NowWeather_Clothes;
  */
 public interface Crawler {
 	public Map<String, Object> getItemList();
-	public List<NowWeather_Clothes> getClothes(String gender, String season);
+	public List<Clothes> getClothes(String gender, String season);
 }

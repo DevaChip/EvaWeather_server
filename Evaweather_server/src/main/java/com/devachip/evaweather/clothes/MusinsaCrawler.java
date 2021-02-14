@@ -24,7 +24,7 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import com.devachip.evaweather.base.PropertiesConfig;
-import com.devachip.evaweather.dto.NowWeather_Clothes;
+import com.devachip.evaweather.dto.clothesapi.Clothes;
 import com.devachip.evaweather.util.BeanUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -75,7 +75,7 @@ public class MusinsaCrawler implements Crawler{
 	}
 
 	@Override
-	public List<NowWeather_Clothes> getClothes(String gender, String season) {
+	public List<Clothes> getClothes(String gender, String season) {
 		String basePath = properties.getClothes_path();
 		InputStream isData = null;
 		InputStream isImg = null;
@@ -84,7 +84,7 @@ public class MusinsaCrawler implements Crawler{
 		
 		try {
 			byte[] imgBytes = null;
-			List<NowWeather_Clothes> clothes = new ArrayList<>();
+			List<Clothes> clothes = new ArrayList<>();
 			
 			Set<String> categoryList = itemList.keySet();
 			for (String category: categoryList) {
@@ -138,7 +138,7 @@ public class MusinsaCrawler implements Crawler{
 					}
 				}
 				
-				// 옷 고르기
+				// 카테고리별 옷 고르기
 				clothesList = chooseClothes(clothesList);
 				
 				// 항목에 대한 이미지, 링크 가져오기
@@ -147,11 +147,7 @@ public class MusinsaCrawler implements Crawler{
 					isImg = new BufferedInputStream(new FileInputStream(clothesPath));
 					imgBytes = IOUtils.toByteArray(isImg);
 					
-					NowWeather_Clothes categoryClothes = new NowWeather_Clothes();
-					categoryClothes.setImg(imgBytes);
-					categoryClothes.setLink(clothesData[LINK]);
-					
-					clothes.add(categoryClothes);
+					clothes.add(new Clothes(imgBytes, clothesData[LINK]));
 				}
 			}
 			
@@ -170,7 +166,7 @@ public class MusinsaCrawler implements Crawler{
 		return null;
 	}
 	
-	// 클라이언트로 전달할 옷 고르기
+	// 목록에서 3개만 추리기
 	private List<String[]> chooseClothes(List<String[]> clothesList) {
 		try {
 			Random rand = new Random();

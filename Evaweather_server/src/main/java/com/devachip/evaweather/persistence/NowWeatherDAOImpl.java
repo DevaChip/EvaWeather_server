@@ -13,11 +13,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Repository;
 
 import com.devachip.evaweather.bean.DBConnect;
-import com.devachip.evaweather.dto.NowWeather;
-import com.devachip.evaweather.dto.NowWeather_DayInfo;
-import com.devachip.evaweather.dto.NowWeather_DayInfo_TimeWeather;
-import com.devachip.evaweather.dto.NowWeather_Detail;
-import com.devachip.evaweather.dto.VilageFcstRequest;
+import com.devachip.evaweather.dto.weatherapi.NowWeather;
+import com.devachip.evaweather.dto.weatherapi.NowWeather_DayInfo;
+import com.devachip.evaweather.dto.weatherapi.NowWeather_DayInfo_TimeWeather;
+import com.devachip.evaweather.dto.weatherapi.NowWeather_Detail;
+import com.devachip.evaweather.dto.weatherapi.VilageFcstRequest;
 import com.devachip.eveweather.mapper.NowWeatherMapper;
 
 import lombok.extern.slf4j.Slf4j;

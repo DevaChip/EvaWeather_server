@@ -1,26 +1,20 @@
-package com.devachip.evaweather.service;
+package com.devachip.evaweather.service.weather;
 
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
-import com.devachip.evaweather.base.PropertiesConfig;
 import com.devachip.evaweather.bean.DataBean;
-import com.devachip.evaweather.clothes.Crawler;
-import com.devachip.evaweather.clothes.WebCrawlingFactory;
-import com.devachip.evaweather.dto.NowWeather;
-import com.devachip.evaweather.dto.NowWeather_AirCondition;
-import com.devachip.evaweather.dto.NowWeather_Clothes;
-import com.devachip.evaweather.dto.NowWeather_Detail;
-import com.devachip.evaweather.dto.NowWeather_DayInfo;
-import com.devachip.evaweather.dto.VilageFcstRequest;
+import com.devachip.evaweather.dto.weatherapi.NowWeather;
+import com.devachip.evaweather.dto.weatherapi.NowWeather_AirCondition;
+import com.devachip.evaweather.dto.weatherapi.NowWeather_DayInfo;
+import com.devachip.evaweather.dto.weatherapi.NowWeather_Detail;
+import com.devachip.evaweather.dto.weatherapi.VilageFcstRequest;
 import com.devachip.evaweather.persistence.NowWeatherDAO;
 import com.devachip.evaweather.vo.LocationInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,31 +32,20 @@ import lombok.extern.slf4j.Slf4j;
 public class WeatherAPIService {
 	private DataBean dataBean;
 	private NowWeatherDAO dao;
-	private PropertiesConfig properties;
 	
 	// Spring 4.3 이상부터 생성자 주입을 사용할 경우, Autowired 어느테이션을 사용하지 않아도 자동 주입된다.
-	public WeatherAPIService(DataBean dataBean, NowWeatherDAO dao, PropertiesConfig properties) {
+	public WeatherAPIService(DataBean dataBean, NowWeatherDAO dao) {
 		this.dataBean = dataBean;
 		this.dao = dao;
-		this.properties = properties;
 	}
 	
-	public String getNowWeather(String gender, String areaCode, String date, String time) {
+	public String getNowWeather(String areaCode) {
 		// 현재 시간
 		DateFormat dFormat = new SimpleDateFormat("yyyyMMdd");
 		DateFormat tFormat = new SimpleDateFormat("HHmm");
 		Date d = new Date();
 		String currentDate = dFormat.format(d); 
 		String currentTime = tFormat.format(d);
-		
-		// TODO: 테스트용 코드, 최종본에선 삭제할 것
-		if (StringUtils.isNotBlank(time)) {
-			currentTime = time;
-		}
-		
-		if (StringUtils.isNotBlank(date)) {
-			currentDate = date;
-		}
 		
 		// 현재시간 기준 가장 최근 정시를 기준으로 조회 
 		String timePtn = "([0-1]{1}[0-9]{1}|2[0-3]{1})00";
@@ -117,9 +100,6 @@ public class WeatherAPIService {
 			dto.setAreaCode(areaCode);
 			dto.setLocationName(locationName);
 			
-			// 옷 정보 세팅
-			setClothes(gender, dto, request);
-			
 			// 모자란 부분 샘플로 채우기(테스트용)
 			setSample(dto);
 			
@@ -129,60 +109,6 @@ public class WeatherAPIService {
 		} 
 		
 		return "{\"error\" : \"data parsing Error.\"}";
-	}
-	
-	/**
-	 * 성별, 계절에 맞는 옷 정보 세팅
-	 * 
-	 * 성별과 계절에 맞는 옷 정보를 서버 내부 파일로부터 읽어온다.
-	 * 옷 정보는 크롤링된 데이터를 사용한다.
-	 * 
-	 * @param dto
-	 * @param request
-	 * @return boolean [true | false]
-	 * 
-	 * @author idean
-	 * @since 2021.01.10
-	 */
-	private boolean setClothes(String gender, NowWeather dto, VilageFcstRequest request) {
-		try {
-			String[] siteList = properties.getSiteList();
-			String season = getSeasonByMonth();
-			
-			Crawler crawler = null;
-			List<NowWeather_Clothes> clothes = new ArrayList<>();
-			for (String siteName: siteList) {
-				crawler = WebCrawlingFactory.getInstance(siteName);
-				
-				List<NowWeather_Clothes> crawlingList = crawler.getClothes(gender, season); 
-				clothes.addAll(crawlingList);
-			}
-			
-			dto.setClothes(clothes);
-
-			return true;
-		} catch (Exception e) {
-			log.error(e.fillInStackTrace() + "");
-		}
-		
-		return false;
-	}
-	
-	private String getSeasonByMonth() {
-		Calendar cal = Calendar.getInstance();
-		
-		int month = cal.get(Calendar.MONTH) + 1;
-		
-		switch(month) {
-		case 3: case 4: case 5: 
-			return "봄";
-		case 6: case 7: case 8: 
-			return "여름";
-		case 9: case 10:  case 11: 
-			return "가을";
-		default:
-			return "겨울";
-		}
 	}
 	
 	private boolean setSample(NowWeather dto) {

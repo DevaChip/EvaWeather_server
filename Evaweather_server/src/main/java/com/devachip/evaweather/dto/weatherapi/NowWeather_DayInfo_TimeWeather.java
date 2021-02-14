@@ -1,4 +1,4 @@
-package com.devachip.evaweather.dto;
+package com.devachip.evaweather.dto.weatherapi;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
