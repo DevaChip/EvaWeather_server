@@ -7,7 +7,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -48,7 +48,7 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 	private final int CONNECT_TIMEOUT = 10000;
 	private final int READ_TIMEOUT = 10000;
 	
-	private StringBuffer sb = new StringBuffer();
+	private StringBuilder sb = new StringBuilder();
 	private UltraSrtFcstDAO dao = (UltraSrtFcstDAO) BeanUtils.getBean(UltraSrtFcstDAOImpl.class);
 	private DataBean dataBean = (DataBean) BeanUtils.getBean(DataBean.class);
 	
@@ -80,7 +80,7 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 		
 		DateFormat timeFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		String nowTime = timeFormat.format(d);
-		sb.append(String.format("[%s][Scheduler] %s Start\n", nowTime, jobDetail));
+		sb.append(String.format("[%s][Scheduler] %s Start%n", nowTime, jobDetail));
 		
 		int updatedRows = 0;
 		int insertedRows = 0;
@@ -103,7 +103,7 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 			String getResult = getVilageFcstData(apiName, request);
 			
 			if (getResult==null) {	// API 통신에 실패한 경우
-				sb.append(String.format("(%s, %s) Failed to receive response from server. Update Skip.\n", info.getNx(), info.getNy()));
+				sb.append(String.format("(%s, %s) Failed to receive response from server. Update Skip.%n", info.getNx(), info.getNy()));
 				failedRows++;
 				continue;
 			}
@@ -114,10 +114,10 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 			// 에러 코드 분류
 			String resultCode = (String) resultMap.get("resultCode");
 			if (StringUtils.equals(resultCode, "03")) {
-				sb.append("No data has been generated for the current time. Job Stop.\n");
+				sb.append("No data has been generated for the current time. Job Stop.%n");
 				break;
 			} else if (!StringUtils.equals(resultCode, "00")) {
-				sb.append(String.format("(%s, %s) %s. Update Skip.\n", info.getNx(), info.getNy(), (String) resultMap.get("resultMsg")));
+				sb.append(String.format("(%s, %s) %s. Update Skip.%n", info.getNx(), info.getNy(), (String) resultMap.get("resultMsg")));
 				failedRows++;
 				continue;
 			}
@@ -136,17 +136,17 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 					break;
 				case DB_FAILED:
 				default:
-					sb.append(String.format("(%d, %d) %s-%s DB update Failed.\n", entity.getNx(), entity.getNy(), entity.getFcstDate(), entity.getFcstTime()));
+					sb.append(String.format("(%d, %d) %s-%s DB update Failed.%n", entity.getNx(), entity.getNy(), entity.getFcstDate(), entity.getFcstTime()));
 				}
 			}
 		}
 		
-		sb.append(String.format("AllRows: %d, updatedRows: %d, insertedRows: %d, failedRows: %d\n",
+		sb.append(String.format("AllRows: %d, updatedRows: %d, insertedRows: %d, failedRows: %d%n",
 				dataBean.getLocationInfoList_schedule().size(), updatedRows, insertedRows, failedRows));
 		
 		Date afterD = new Date();
 		String afterTime = timeFormat.format(afterD);
-		sb.append(String.format("[%s][Scheduler] %s End\n", afterTime, jobDetail));
+		sb.append(String.format("[%s][Scheduler] %s End%n", afterTime, jobDetail));
 		
 		float runTime = (float) ((afterD.getTime() - d.getTime())/1000.0);
 		sb.append(String.format("runTime: %dm %.3fs", (int) (runTime/60), runTime%60));
@@ -161,7 +161,7 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 	 * @return	[통신 성공: String | 실패: null]
 	 */
 	public String getVilageFcstData(String apiName, VilageFcstRequest request) {
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 
 		long startTime = new Date().getTime();
 		
@@ -201,9 +201,9 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 			int resCode = conn.getResponseCode();
 			BufferedReader br;
 			if (HttpURLConnection.HTTP_OK <= resCode && resCode <= HttpURLConnection.HTTP_MULT_CHOICE) {
-				br = new BufferedReader(new InputStreamReader(conn.getInputStream(), Charset.forName("UTF-8")));
+				br = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8));
 			} else {
-				br = new BufferedReader(new InputStreamReader(conn.getErrorStream(), Charset.forName("UTF-8")));
+				br = new BufferedReader(new InputStreamReader(conn.getErrorStream(), StandardCharsets.UTF_8));
 			}
 
 			sb.setLength(0); // 버퍼 초기화
@@ -236,7 +236,7 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 	 */
 	@SuppressWarnings("unchecked")
 	public Map<String, Object> jsonToObject(String jsonString) {
-		Map<String, Object> resultMap = new HashMap<String, Object>();
+		Map<String, Object> resultMap = new HashMap<>();
 		ObjectMapper mapper = new ObjectMapper();
 		
 		long startTime = new Date().getTime();
@@ -249,7 +249,7 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 			Map<String, Object> header = (Map<String, Object>)map.get("header");
 			String resultCode = (String)header.get("resultCode");
 			resultMap.put("resultCode", resultCode);
-			resultMap.put("resultMsg", (String)header.get("resultMsg"));
+			resultMap.put("resultMsg", header.get("resultMsg"));
 			if ( !StringUtils.equals("00", resultCode) ) {	
 				return resultMap;
 			}
@@ -264,7 +264,7 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 						(String) item.get("fcstTime"), (int) item.get("nx"), (int) item.get("ny"));
 				
 				if (dtoMap.get(key)==null) {
-					dtoMap.put(key, new HashMap<String, Object>());
+					dtoMap.put(key, new HashMap<>());
 				}
 				
 				Map<String, Object> category = dtoMap.get(key);
@@ -278,10 +278,23 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 			for (Fcst_Key key: keys) {
 				Map<String, Object> category = dtoMap.get(key);
 				
-				UltraSrtFcst entity = new UltraSrtFcst(key.getFcstDate(), key.getFcstTime(), key.getNx(), key.getNy(),
-						(float) category.get("T1H"), (float) category.get("RN1"), (float) category.get("SKY"), (float) category.get("UUU"),
-						(float) category.get("VVV"), (float) category.get("REH"), (float) category.get("PTY"), (float) category.get("LGT"),
-						(float) category.get("VEC"), (float) category.get("WSD"));
+				UltraSrtFcst entity = UltraSrtFcst.builder()
+						.fcstDate(key.getFcstDate())
+						.fcstTime(key.getFcstTime())
+						.nx(key.getNx())
+						.ny(key.getNy())
+						.T1H((float) category.get("T1H"))
+						.RN1((float) category.get("RN1"))
+						.SKY((float) category.get("SKY"))
+						.UUU((float) category.get("UUU"))
+						.VVV((float) category.get("VVV"))
+						.REH((float) category.get("REH"))
+						.PTY((float) category.get("PTY"))
+						.LGT((float) category.get("LGT"))
+						.VEC((float) category.get("VEC"))
+						.WSD((float) category.get("WSD"))
+						.build();
+						
 				entityList.add(entity);
 			}
 			

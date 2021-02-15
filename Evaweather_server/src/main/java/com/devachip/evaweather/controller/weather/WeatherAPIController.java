@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.devachip.evaweather.service.weather.WeatherAPIService;
 
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 /**
  * 날씨 조회 컨트롤러
@@ -23,9 +24,10 @@ public class WeatherAPIController {
 		this.service = service;
 	}
 
-	@ApiOperation(value="get Weather", notes="특정 위치의 현재 날씨 및 옷 정보 조회")
-	@GetMapping(value = "/now", produces="application/json;charset=UTF-8")
-	public String getVilageFcstInfo(@RequestParam(required=true, defaultValue="2800000000") String areaCode) {
+	@ApiOperation(value = "get Weather", notes = "특정 위치의 현재 날씨 및 옷 정보 조회")
+	@GetMapping(value = "/now", produces = "application/json;charset=UTF-8")
+	public String getVilageFcstInfo(
+			@ApiParam("행정구역코드") @RequestParam(required = true) String areaCode) {
 		return service.getNowWeather(areaCode);
 	}
 }

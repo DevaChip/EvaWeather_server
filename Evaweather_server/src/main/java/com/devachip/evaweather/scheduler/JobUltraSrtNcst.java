@@ -8,6 +8,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -46,7 +47,7 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 	private final int CONNECT_TIMEOUT = 10000;
 	private final int READ_TIMEOUT = 10000;
 	
-	private StringBuffer sb = new StringBuffer();
+	private StringBuilder sb = new StringBuilder();
 	
 	// TODO : Autowired 할 수 있도록 SchedulerFactoryBean 코드로 구현하여 ApplicationContext 설정하기
 	private UltraSrtNcstDAO dao = (UltraSrtNcstDAO) BeanUtils.getBean(UltraSrtNcstDAOImpl.class);
@@ -157,7 +158,7 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 	 * @return	[통신 성공: String | 실패: null]
 	 */
 	public String getVilageFcstData(String apiName, VilageFcstRequest request) {
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 
 		long startTime = new Date().getTime();
 		
@@ -197,9 +198,9 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 			int resCode = conn.getResponseCode();
 			BufferedReader br;
 			if (HttpURLConnection.HTTP_OK <= resCode && resCode <= HttpURLConnection.HTTP_MULT_CHOICE) {
-				br = new BufferedReader(new InputStreamReader(conn.getInputStream(), Charset.forName("UTF-8")));
+				br = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8));
 			} else {
-				br = new BufferedReader(new InputStreamReader(conn.getErrorStream(), Charset.forName("UTF-8")));
+				br = new BufferedReader(new InputStreamReader(conn.getErrorStream(), StandardCharsets.UTF_8));
 			}
 
 			sb.setLength(0); // 버퍼 초기화
@@ -232,7 +233,7 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 	 */
 	@SuppressWarnings("unchecked")
 	public Map<String, Object> jsonToObject(String jsonString) {
-		Map<String, Object> resultMap = new HashMap<String, Object>();
+		Map<String, Object> resultMap = new HashMap<>();
 		ObjectMapper mapper = new ObjectMapper();
 		
 		long startTime = new Date().getTime();
@@ -263,10 +264,21 @@ public class JobUltraSrtNcst extends QuartzJobBean {
 				dtoMap.put((String) item.get("category"), Float.parseFloat((String) item.get("obsrValue")));
 			}
 			
-			UltraSrtNcst entity = new UltraSrtNcst((String) dtoMap.get("baseDate"), (String) dtoMap.get("baseTime"), (int) dtoMap.get("nx"), (int) dtoMap.get("ny"),
-					(float) dtoMap.get("PTY"), (float) dtoMap.get("REH"), (float) dtoMap.get("RN1"), (float) dtoMap.get("T1H"),
-					(float) dtoMap.get("UUU"), (float) dtoMap.get("VEC"), (float) dtoMap.get("VVV"), (float) dtoMap.get("WSD")); 
-			
+			UltraSrtNcst entity = UltraSrtNcst.builder()
+					.baseDate((String) dtoMap.get("baseDate"))
+					.baseTime((String) dtoMap.get("baseTime"))
+					.nx((int) dtoMap.get("nx"))
+					.ny((int) dtoMap.get("ny"))
+					.PTY((float) dtoMap.get("PTY"))
+					.REH((float) dtoMap.get("REH"))
+					.RN1((float) dtoMap.get("RN1"))
+					.T1H((float) dtoMap.get("T1H"))
+					.UUU((float) dtoMap.get("UUU"))
+					.VEC((float) dtoMap.get("VEC"))
+					.VVV((float) dtoMap.get("VVV"))
+					.WSD((float) dtoMap.get("WSD"))
+					.build();
+					
 			resultMap.put("entity", entity);
 			return resultMap;
 		} catch(IOException e) {

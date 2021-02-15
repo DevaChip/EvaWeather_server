@@ -49,7 +49,7 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 	private final int CONNECT_TIMEOUT = 10000;
 	private final int READ_TIMEOUT = 10000;
 	
-	private StringBuffer sb = new StringBuffer();
+	private StringBuilder sb = new StringBuilder();
 	
 	private VilageFcstDAO dao = (VilageFcstDAO) BeanUtils.getBean(VilageFcstDAOImpl.class);
 	private DataBean dataBean = (DataBean) BeanUtils.getBean(DataBean.class);
@@ -162,7 +162,7 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 	 * @return	[통신 성공: String | 실패: null]
 	 */
 	public String getVilageFcstData(String apiName, VilageFcstRequest request) {
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 
 		long startTime = new Date().getTime();
 		try {
@@ -249,7 +249,7 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 			Map<String, Object> header = (Map<String, Object>)map.get("header");
 			String resultCode = (String)header.get("resultCode");
 			resultMap.put("resultCode", resultCode);
-			resultMap.put("resultMsg", (String)header.get("resultMsg"));
+			resultMap.put("resultMsg", header.get("resultMsg"));
 			if ( !StringUtils.equals("00", resultCode) ) {	
 				return resultMap;
 			}
@@ -264,7 +264,7 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 						(String) item.get("fcstTime"), (int) item.get("nx"), (int) item.get("ny"));
 				
 				if (dtoMap.get(key)==null) {
-					dtoMap.put(key, new HashMap<String, Object>());
+					dtoMap.put(key, new HashMap<>());
 				}
 				
 				Map<String, Object> category = dtoMap.get(key);
@@ -278,11 +278,26 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 			for (Fcst_Key key: keys) {
 				Map<String, Object> category = dtoMap.get(key);
 				
-				VilageFcst entity = new VilageFcst(key.getFcstDate(), key.getFcstTime(), key.getNx(), key.getNy(),
-						(float) category.get("POP"), (float) category.get("PTY"), getFloat(category, "R06"), (float) category.get("REH"),
-						getFloat(category, "S06"), (float) category.get("SKY"), (float) category.get("T3H"), getFloat(category, "TMN"),
-						getFloat(category, "TMX"), (float) category.get("UUU"), (float) category.get("VVV"), getFloat(category, "WAV"),
-						(float) category.get("VEC"), (float) category.get("WSD"));
+				VilageFcst entity = VilageFcst.builder()
+						.fcstDate(key.getFcstDate())
+						.fcstTime(key.getFcstTime())
+						.nx(key.getNx())
+						.ny(key.getNy())
+						.POP((float) category.get("POP"))
+						.PTY((float) category.get("PTY"))
+						.R06(getFloat(category, "R06"))
+						.REH((float) category.get("REH"))
+						.S06(getFloat(category, "S06"))
+						.SKY((float) category.get("SKY"))
+						.T3H((float) category.get("T3H"))
+						.TMN(getFloat(category, "TMN"))
+						.TMX(getFloat(category, "TMX"))
+						.UUU((float) category.get("UUU"))
+						.VVV((float) category.get("VVV"))
+						.WAV(getFloat(category, "WAV"))
+						.VEC((float) category.get("VEC"))
+						.WSD((float) category.get("WSD"))
+						.build();
 				
 				entityList.add(entity);
 			}
@@ -290,9 +305,6 @@ private static final String SERVICE_KEY = "5U%2F51omK%2FH%2F1Qf3TZG9f0QkCSHP9fpI
 			resultMap.put("entityList", entityList);
 			return resultMap;
 		} catch(IOException e) {
-			sb.append(e.fillInStackTrace()).append("\n");
-			resultMap = new HashMap<>();
-		} catch(Exception e) {
 			sb.append(e.fillInStackTrace()).append("\n");
 			resultMap = new HashMap<>();
 		} finally {

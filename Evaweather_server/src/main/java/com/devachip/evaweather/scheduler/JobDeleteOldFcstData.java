@@ -30,21 +30,20 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class JobDeleteOldFcstData extends QuartzJobBean{
-	private StringBuffer sb = new StringBuffer();
+	private StringBuilder sb = new StringBuilder();
 	
 	@Override
 	protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
 		
 		String jobName = context.getJobDetail().getKey().getName();
-		String jobDetail = context.getJobDetail().getKey().getName();
 		
 		log.debug("===================== [{}] START =====================", jobName);
-		deleteFcstData(jobDetail);
+		deleteFcstData();
 		log.debug("\n" + sb.toString());	// 실행결과 한번에 출력
 		log.debug("===================== [{}] END =====================", jobName);
 	}
 	
-	public void deleteFcstData(String jobDetail) {
+	public void deleteFcstData() {
 		/* 삭제 기준일 설정*/
 		LocalDateTime baseDate = LocalDateTime.now().minusDays(2);	// 2일전
 		
@@ -61,14 +60,14 @@ public class JobDeleteOldFcstData extends QuartzJobBean{
 	private boolean deleteUltraSrtNcst(String baseDate) {
 		UltraSrtNcstDAO dao = (UltraSrtNcstDAO) BeanUtils.getBean(UltraSrtNcstDAOImpl.class);
 		
-		UltraSrtNcst entity = new UltraSrtNcst(baseDate, "", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		UltraSrtNcst entity = UltraSrtNcst.builder().baseDate(baseDate).build();
 		int updatedRow = dao.delete(entity);
 		
 		if (updatedRow>-1) {
-			sb.append(String.format("[%s] Data prior to base date has been successfully deleted. baseDate: %s, updatedRow: %d\n", UltraSrtNcst.tableName, baseDate, updatedRow));
+			sb.append(String.format("[%s] Data prior to base date has been successfully deleted. baseDate: %s, updatedRow: %d%n", UltraSrtNcst.TABLE_NAME, baseDate, updatedRow));
 			return true;
 		} else {
-			sb.append(String.format("[%s] Data DB update Failed. baseDate: %s\n", UltraSrtNcst.tableName, entity.getBaseDate()));
+			sb.append(String.format("[%s] Data DB update Failed. baseDate: %s%n", UltraSrtNcst.TABLE_NAME, entity.getBaseDate()));
 		}
 		return false;
 	}
@@ -77,14 +76,14 @@ public class JobDeleteOldFcstData extends QuartzJobBean{
 	private boolean deleteUltraSrtFcst(String baseDate) {
 		UltraSrtFcstDAO dao = (UltraSrtFcstDAO) BeanUtils.getBean(UltraSrtFcstDAOImpl.class);
 		
-		UltraSrtFcst entity =  new UltraSrtFcst(baseDate, "", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		UltraSrtFcst entity = UltraSrtFcst.builder().fcstDate(baseDate).build();
 		int updatedRow = dao.delete(entity);
 		
 		if (updatedRow>-1) {
-			sb.append(String.format("[%s] Data prior to base date has been successfully deleted. baseDate: %s, updatedRow: %d\n", UltraSrtFcst.tableName, baseDate, updatedRow));
+			sb.append(String.format("[%s] Data prior to base date has been successfully deleted. baseDate: %s, updatedRow: %d%n", UltraSrtFcst.TABLE_NAME, baseDate, updatedRow));
 			return true;
 		} else {
-			sb.append(String.format("[%s] Data DB update Failed. baseDate: %s\n", UltraSrtFcst.tableName, entity.getFcstDate()));
+			sb.append(String.format("[%s] Data DB update Failed. baseDate: %s%n", UltraSrtFcst.TABLE_NAME, entity.getFcstDate()));
 		}
 		return false;
 	}
@@ -93,14 +92,17 @@ public class JobDeleteOldFcstData extends QuartzJobBean{
 	private boolean deleteVilageFcst(String baseDate) {
 		VilageFcstDAO dao = (VilageFcstDAO) BeanUtils.getBean(VilageFcstDAOImpl.class);
 		
-		VilageFcst entity = new VilageFcst(baseDate, "", 0, 0, 0, 0, (float)0, 0, (float)0, 0, 0, (float)0, (float)0, 0, 0, (float)0, 0, 0);
+		VilageFcst entity = VilageFcst.builder()
+				.fcstDate(baseDate)
+				.build();
+				
 		int updatedRow = dao.delete(entity);
 		
 		if (updatedRow>-1) {
-			sb.append(String.format("[%s] Data prior to base date has been successfully deleted. baseDate: %s, updatedRow: %d\n", VilageFcst.tableName, baseDate, updatedRow));
+			sb.append(String.format("[%s] Data prior to base date has been successfully deleted. baseDate: %s, updatedRow: %d%n", VilageFcst.TABLE_NAME, baseDate, updatedRow));
 			return true;
 		} else {
-			sb.append(String.format("[%s] Data DB update Failed. baseDate: %s\n", VilageFcst.tableName, entity.getFcstDate()));
+			sb.append(String.format("[%s] Data DB update Failed. baseDate: %s%n", VilageFcst.TABLE_NAME, entity.getFcstDate()));
 		}
 		return false;
 	}

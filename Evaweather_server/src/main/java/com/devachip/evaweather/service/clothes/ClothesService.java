@@ -3,6 +3,8 @@ package com.devachip.evaweather.service.clothes;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Supplier;
 
 import org.springframework.stereotype.Service;
 
@@ -47,15 +49,15 @@ public class ClothesService {
 			String season = getSeasonByMonth();
 			
 			Crawler crawler = null;
-			List<Clothes> clothes = new ArrayList<>();
+			List<Clothes> clothesList = new ArrayList<>();
 			for (String siteName: siteList) {
 				crawler = CrawlerFactory.getInstance(siteName);
 				
 				List<Clothes> crawlingList = crawler.getClothes(gender, season); 
-				clothes.addAll(crawlingList);
+				clothesList.addAll(crawlingList);
 			}
 			
-			response = new ClothesResponse(clothes);
+			response = new ClothesResponse(clothesList);
 			
 			return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(response);
 		} catch (Exception e) {
@@ -66,19 +68,11 @@ public class ClothesService {
 	}
 	
 	private String getSeasonByMonth() {
-		Calendar cal = Calendar.getInstance();
-		
-		int month = cal.get(Calendar.MONTH) + 1;
-		
-		switch(month) {
-		case 3: case 4: case 5: 
-			return "봄";
-		case 6: case 7: case 8: 
-			return "여름";
-		case 9: case 10:  case 11: 
-			return "가을";
-		default:
-			return "겨울";
-		}
+		Supplier<Integer> month = () -> (Calendar.getInstance().get(Calendar.MONTH) + 1)%12; 
+		return Optional.of(month.get())
+				.filter(m -> m <3).map(m -> "겨울")
+				.or(() -> Optional.of(month.get()).filter(m -> m < 6).map(m -> "봄"))
+				.or(() -> Optional.of(month.get()).filter(m -> m < 9).map(m -> "여름"))
+				.orElseGet(() ->"가을");
 	}
 }
